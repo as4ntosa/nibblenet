@@ -41,7 +41,7 @@ export type CuisineTag =
 
 export type ListingStatus = 'available' | 'reserved' | 'sold_out' | 'expired';
 
-export type ReservationStatus = 'confirmed' | 'picked_up' | 'cancelled';
+export type ReservationStatus = 'confirmed' | 'picked_up' | 'cancelled' | 'cancelled_at_pickup';
 
 export interface User {
   id: string;
@@ -88,6 +88,8 @@ export interface Listing {
   pickupEndTime: string;
   pickupInstructions?: string;
   imageUrl: string;
+  isRescueBundle?: boolean;
+  isCommunityPantry?: boolean;
   createdAt: string;
   expiresAt: string;
   distance?: number;

@@ -56,6 +56,8 @@ interface DataContextValue {
   deleteListing: (id: string) => void;
   reserveListing: (listing: Listing, consumerId: string, consumerName: string, qty: number) => Reservation;
   cancelReservation: (id: string) => void;
+  confirmPickup: (id: string) => void;
+  cancelAtPickup: (id: string) => void;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -178,6 +180,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const confirmPickup = (id: string) => {
+    dispatch({ type: 'UPDATE_RESERVATION', id, status: 'picked_up' });
+  };
+
+  const cancelAtPickup = (id: string) => {
+    const res = state.reservations.find((r) => r.id === id);
+    if (!res) return;
+    dispatch({ type: 'UPDATE_RESERVATION', id, status: 'cancelled_at_pickup' });
+    dispatch({
+      type: 'UPDATE_LISTING',
+      id: res.listingId,
+      data: {
+        quantityReserved: Math.max(0, res.listing.quantityReserved - res.quantity),
+        status: 'available',
+      },
+    });
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -192,6 +212,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         deleteListing,
         reserveListing,
         cancelReservation,
+        confirmPickup,
+        cancelAtPickup,
       }}
     >
       {children}

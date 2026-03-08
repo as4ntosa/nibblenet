@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, MapPin, Navigation, Loader2 } from 'lucide-react';
+import { Search, MapPin, Navigation, Loader2, Leaf, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { ListingCard } from '@/components/listing/ListingCard';
 import { useAuth } from '@/context/AuthContext';
@@ -152,6 +152,25 @@ export default function HomePage() {
             See all
           </Link>
         </div>
+
+        {/* Impact counter */}
+        <div className="flex items-center gap-3 bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 mb-4">
+          <Leaf size={16} className="text-brand-600 shrink-0" />
+          <p className="text-xs text-brand-700">
+            <span className="font-bold">1,284 meals rescued</span> in San Francisco this week · saving an estimated <span className="font-bold">3.2 tonnes CO₂</span>
+          </p>
+        </div>
+
+        {/* Allergen filter active banner */}
+        {userAllergies && userAllergies.length > 0 && (
+          <Link href="/profile" className="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 mb-4 hover:bg-amber-100 transition-colors">
+            <AlertCircle size={15} className="text-amber-500 shrink-0" />
+            <p className="text-xs text-amber-700 flex-1">
+              <span className="font-semibold">Allergen filter active</span> — hiding listings with {userAllergies.slice(0, 2).join(', ')}{userAllergies.length > 2 ? ` +${userAllergies.length - 2} more` : ''}
+            </p>
+            <span className="text-[10px] text-amber-500 font-medium shrink-0">Manage →</span>
+          </Link>
+        )}
 
         {/* Location permission prompt */}
         {status === 'idle' && (

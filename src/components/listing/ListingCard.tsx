@@ -4,8 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Clock } from 'lucide-react';
 import { Listing } from '@/types';
-import { formatPrice, discountPercent, formatPickupWindow, CATEGORY_EMOJI, STATUS_COLOR, STATUS_LABEL, timeUntil } from '@/lib/utils';
-import { Badge } from '@/components/ui/Badge';
+import { formatPrice, discountPercent, formatPickupWindow, CATEGORY_EMOJI, STATUS_LABEL, timeUntil, ALLERGEN_LABEL } from '@/lib/utils';
 
 interface ListingCardProps {
   listing: Listing;
@@ -15,7 +14,7 @@ export function ListingCard({ listing }: ListingCardProps) {
   const {
     id, title, businessName, category, price, originalPrice,
     quantity, quantityReserved, status, pickupStartTime, pickupEndTime,
-    pickupCity, imageUrl, expiresAt, distance, tags,
+    pickupCity, imageUrl, expiresAt, distance, allergens, isRescueBundle,
   } = listing;
 
   const remaining = quantity - quantityReserved;
@@ -40,15 +39,21 @@ export function ListingCard({ listing }: ListingCardProps) {
               -{discount}%
             </div>
           )}
-          {/* Status badge */}
+          {/* Rescue bundle badge */}
+          {isRescueBundle && (
+            <div className="absolute top-2 left-2 bg-brand-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-lg flex items-center gap-0.5">
+              🎁 Rescue Bundle
+            </div>
+          )}
+          {/* Status overlay */}
           {status !== 'available' && (
-            <div className={`absolute inset-0 flex items-center justify-center bg-black/40`}>
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40">
               <span className="bg-white text-gray-800 text-xs font-semibold px-3 py-1 rounded-full">
                 {STATUS_LABEL[status]}
               </span>
             </div>
           )}
-          {/* Expiry */}
+          {/* Expiry timer */}
           {status === 'available' && (
             <div className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-md flex items-center gap-1">
               <Clock size={9} />
@@ -84,7 +89,7 @@ export function ListingCard({ listing }: ListingCardProps) {
           </div>
 
           {/* Meta */}
-          <div className="flex items-center gap-2 text-[11px] text-gray-400">
+          <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-2">
             <span className="flex items-center gap-1">
               <Clock size={11} />
               {formatPickupWindow(pickupStartTime, pickupEndTime)}
@@ -96,6 +101,22 @@ export function ListingCard({ listing }: ListingCardProps) {
               </span>
             )}
           </div>
+
+          {/* Allergen indicators */}
+          {allergens && allergens.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {allergens.slice(0, 3).map((a) => (
+                <span key={a} className="text-[9px] font-semibold bg-red-50 text-red-500 border border-red-100 px-1 py-0.5 rounded-md">
+                  {ALLERGEN_LABEL[a]}
+                </span>
+              ))}
+              {allergens.length > 3 && (
+                <span className="text-[9px] font-semibold bg-gray-100 text-gray-400 px-1 py-0.5 rounded-md">
+                  +{allergens.length - 3}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </Link>

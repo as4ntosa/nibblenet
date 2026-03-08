@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
-  ArrowLeft, MapPin, Clock, Store, ShoppingBag, Minus, Plus, CheckCircle, Share2
+  ArrowLeft, MapPin, Clock, Store, ShoppingBag, Minus, Plus, CheckCircle, Share2, ShieldCheck, AlertTriangle, Flag
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -13,7 +13,7 @@ import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import {
   formatPrice, discountPercent, formatPickupWindow, CATEGORY_EMOJI,
-  STATUS_LABEL, timeUntil, cn,
+  STATUS_LABEL, timeUntil, cn, ALLERGEN_LABEL,
 } from '@/lib/utils';
 
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
@@ -25,6 +25,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const [qty, setQty] = useState(1);
   const [reserving, setReserving] = useState(false);
   const [reserved, setReserved] = useState<{ code: string; total: number } | null>(null);
+  const [reported, setReported] = useState(false);
 
   if (!listing) {
     return (
@@ -37,9 +38,9 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   }
 
   const {
-    title, businessName, businessType, description, category, tags, price, originalPrice,
+    title, businessName, businessType, description, category, tags, allergens, price, originalPrice,
     quantity, quantityReserved, status, pickupAddress, pickupCity, pickupZip,
-    pickupStartTime, pickupEndTime, pickupInstructions, imageUrl, expiresAt, distance,
+    pickupStartTime, pickupEndTime, pickupInstructions, imageUrl, expiresAt, distance, isRescueBundle,
   } = listing;
 
   const remaining = quantity - quantityReserved;
@@ -182,6 +183,61 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
             {remaining} of {quantity} remaining
           </span>
         </div>
+
+        {/* Rescue bundle notice */}
+        {isRescueBundle && (
+          <div className="bg-brand-50 border border-brand-100 rounded-2xl p-4 mb-4">
+            <p className="text-xs font-bold text-brand-700 mb-1">🎁 Rescue Bundle</p>
+            <p className="text-xs text-brand-600 leading-relaxed">
+              This is a mystery surplus box — exact contents vary. All allergens are disclosed above. You have the right to inspect the contents at pickup before accepting.
+            </p>
+          </div>
+        )}
+
+        {/* Allergen information */}
+        {allergens && allergens.length > 0 && (
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle size={14} className="text-red-500 shrink-0" />
+              <p className="text-xs font-bold text-red-700">Contains Allergens</p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {allergens.map((a) => (
+                <span key={a} className="text-xs font-semibold bg-white text-red-600 border border-red-200 px-2 py-0.5 rounded-lg">
+                  {ALLERGEN_LABEL[a]}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pickup inspection rights */}
+        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 mb-4">
+          <div className="flex items-start gap-2">
+            <ShieldCheck size={14} className="text-brand-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold text-gray-700 mb-1">Your pickup rights</p>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                You have the right to inspect this item at pickup. If it doesn't match the listing or appears unsafe, you may cancel on-site at no charge. Providers are required to accept this.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Report listing */}
+        <div className="text-center pb-4">
+          {reported ? (
+            <p className="text-xs text-gray-400">Report received — our team will review this listing.</p>
+          ) : (
+            <button
+              onClick={() => setReported(true)}
+              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors mx-auto"
+            >
+              <Flag size={12} />
+              Report this listing
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Sticky reserve bar */}
@@ -266,6 +322,13 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
               <p className="text-xs text-gray-400">Location</p>
               <p className="text-sm font-semibold text-gray-800">{pickupAddress}, {pickupCity}</p>
             </div>
+          </div>
+
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4 text-left">
+            <ShieldCheck size={13} className="text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700 leading-relaxed">
+              You may inspect this item at pickup. If it doesn't match the listing, you can cancel on-site at no charge.
+            </p>
           </div>
 
           <Button
