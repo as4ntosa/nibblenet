@@ -56,6 +56,8 @@ export interface Listing {
   pickupAddress: string;
   pickupCity: string;
   pickupZip: string;
+  pickupLat?: number;
+  pickupLng?: number;
   pickupStartTime: string;
   pickupEndTime: string;
   pickupInstructions?: string;
