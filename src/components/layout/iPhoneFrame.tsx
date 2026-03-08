@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { ChatBot } from '@/components/ChatBot';
 
 // ─── Status Bar ────────────────────────────────────────────────────────────
 function StatusBar() {
@@ -249,6 +250,7 @@ export function IPhoneFrame({ children }: iPhoneFrameProps) {
               >
                 {children}
               </div>
+              <ChatBot />
               <HomeIndicator />
             </div>
           </div>
@@ -256,8 +258,9 @@ export function IPhoneFrame({ children }: iPhoneFrameProps) {
       </div>
 
       {/* ── Mobile: full screen ── */}
-      <div className="md:hidden min-h-screen">
+      <div className="md:hidden min-h-screen relative">
         {children}
+        <ChatBot />
       </div>
     </>
   );
