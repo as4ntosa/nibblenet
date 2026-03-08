@@ -123,15 +123,24 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
         <h1 className="text-xl font-bold text-gray-900 mb-1">{title}</h1>
 
         {/* Business */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
             <Store size={12} className="text-gray-400" />
           </div>
           <span className="text-sm text-gray-500">{businessName}</span>
           {businessType && (
-            <span className="text-xs text-gray-300">·</span>
+            <span className={cn(
+              'text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0',
+              businessType === 'Restaurant' ? 'bg-orange-50 text-orange-600' :
+              businessType === 'Bakery' ? 'bg-amber-50 text-amber-600' :
+              businessType === 'Grocery' ? 'bg-green-50 text-green-700' :
+              businessType === 'Household' ? 'bg-purple-50 text-purple-600' :
+              businessType === 'Market' ? 'bg-teal-50 text-teal-600' :
+              'bg-gray-100 text-gray-500'
+            )}>
+              {businessType}
+            </span>
           )}
-          {businessType && <span className="text-xs text-gray-400">{businessType}</span>}
         </div>
 
         {/* Price */}
@@ -148,6 +157,59 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
           <h2 className="text-sm font-semibold text-gray-700 mb-2">About this listing</h2>
           <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
         </div>
+
+        {/* Food Details section — shown first so consumers know what they're getting */}
+        {(foodCondition || freshnessNote || preparedAt || handlingNotes) && (
+          <div className="bg-gray-50 rounded-2xl p-4 mb-5 space-y-3">
+            <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
+              <Info size={14} className="text-gray-400" />
+              Food Details
+            </h2>
+
+            {/* Condition badge */}
+            {foodCondition && (
+              <div className="flex items-center gap-2">
+                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${FOOD_CONDITION_COLOR[foodCondition]}`}>
+                  <span>{FOOD_CONDITION_ICON[foodCondition]}</span>
+                  {FOOD_CONDITION_LABEL[foodCondition]}
+                </span>
+              </div>
+            )}
+
+            {/* Prepared time / food age */}
+            {preparedAt && (
+              <div className="flex items-start gap-2.5">
+                <Clock size={13} className="text-gray-400 shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-semibold text-gray-600">Prepared</p>
+                  <p className="text-sm text-gray-700">{formatFoodAge(preparedAt)}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Freshness note */}
+            {freshnessNote && (
+              <div className="flex items-start gap-2.5">
+                <span className="text-sm shrink-0 mt-0.5">🌿</span>
+                <div>
+                  <p className="text-xs font-semibold text-gray-600">Freshness</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{freshnessNote}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Handling notes */}
+            {handlingNotes && (
+              <div className="flex items-start gap-2.5 pt-2 border-t border-gray-200">
+                <span className="text-sm shrink-0 mt-0.5">📋</span>
+                <div>
+                  <p className="text-xs font-semibold text-gray-600">Storage & Handling</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{handlingNotes}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Pickup info */}
         <div className="bg-gray-50 rounded-2xl p-4 mb-5 space-y-3">
@@ -209,6 +271,19 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
             </div>
           )}
 
+          {/* Get Directions button */}
+          {listing.pickupLat != null && listing.pickupLng != null && (
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${listing.pickupLat},${listing.pickupLng}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors"
+            >
+              <Navigation size={15} />
+              Get Directions
+            </a>
+          )}
+
           {/* Pickup location map — shows user pin + provider pin when location is granted */}
           {listing.pickupLat != null && listing.pickupLng != null && (
             <PickupMap
@@ -222,59 +297,6 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
             />
           )}
         </div>
-
-        {/* Food Details section */}
-        {(foodCondition || freshnessNote || preparedAt || handlingNotes) && (
-          <div className="bg-gray-50 rounded-2xl p-4 mb-5 space-y-3">
-            <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-1.5">
-              <Info size={14} className="text-gray-400" />
-              Food Details
-            </h2>
-
-            {/* Condition badge */}
-            {foodCondition && (
-              <div className="flex items-center gap-2">
-                <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${FOOD_CONDITION_COLOR[foodCondition]}`}>
-                  <span>{FOOD_CONDITION_ICON[foodCondition]}</span>
-                  {FOOD_CONDITION_LABEL[foodCondition]}
-                </span>
-              </div>
-            )}
-
-            {/* Prepared time / food age */}
-            {preparedAt && (
-              <div className="flex items-start gap-2.5">
-                <Clock size={13} className="text-gray-400 shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-semibold text-gray-600">Prepared</p>
-                  <p className="text-sm text-gray-700">{formatFoodAge(preparedAt)}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Freshness note */}
-            {freshnessNote && (
-              <div className="flex items-start gap-2.5">
-                <span className="text-sm shrink-0 mt-0.5">🌿</span>
-                <div>
-                  <p className="text-xs font-semibold text-gray-600">Freshness</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{freshnessNote}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Handling notes */}
-            {handlingNotes && (
-              <div className="flex items-start gap-2.5 pt-2 border-t border-gray-200">
-                <span className="text-sm shrink-0 mt-0.5">📋</span>
-                <div>
-                  <p className="text-xs font-semibold text-gray-600">Storage & Handling</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{handlingNotes}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Availability */}
         <div className="flex items-center justify-between bg-brand-50 rounded-xl px-4 py-3 mb-4">

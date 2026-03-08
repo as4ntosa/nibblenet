@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Search, MapPin, Navigation, Loader2, Leaf, AlertCircle, LayoutGrid, Map } from 'lucide-react';
 import Link from 'next/link';
 import { ListingCard } from '@/components/listing/ListingCard';
+import { ListingCardSkeleton } from '@/components/listing/ListingCardSkeleton';
 import { ListingsMap } from '@/components/map/ListingsMap';
 import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
@@ -240,6 +241,13 @@ export default function HomePage() {
             className="w-full"
             style={{ height: 'calc(100vh - 320px)', minHeight: 360 }}
           />
+        ) : listingsFetchStatus === 'loading' ? (
+          /* ── Skeleton while Supabase fetches ──────────────────── */
+          <div className="grid grid-cols-2 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <ListingCardSkeleton key={i} />
+            ))}
+          </div>
         ) : listings.length === 0 ? (
           /* ── Empty state ──────────────────────────────────────── */
           <div className="text-center py-16">

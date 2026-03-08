@@ -7,7 +7,7 @@ import { Listing } from '@/types';
 import {
   formatPrice, discountPercent, formatPickupWindow, CATEGORY_EMOJI,
   STATUS_LABEL, timeUntil, ALLERGEN_LABEL, FOOD_CONDITION_LABEL, FOOD_CONDITION_ICON,
-  formatDistance, cn,
+  formatDistance, formatFoodAge, cn,
 } from '@/lib/utils';
 
 interface ListingCardProps {
@@ -34,7 +34,7 @@ export function ListingCard({ listing }: ListingCardProps) {
     id, title, businessName, businessType, category, tags, price, originalPrice,
     quantity, quantityReserved, status, pickupStartTime, pickupEndTime,
     imageUrl, expiresAt, distance, allergens, isRescueBundle, isSurpriseBox,
-    surpriseBoxSize, foodCondition,
+    surpriseBoxSize, foodCondition, preparedAt,
   } = listing;
 
   const remaining = quantity - quantityReserved;
@@ -147,10 +147,18 @@ export function ListingCard({ listing }: ListingCardProps) {
           </div>
 
           {/* Pickup time */}
-          <div className="flex items-center gap-1 text-[10px] text-gray-400 mb-2">
+          <div className="flex items-center gap-1 text-[10px] text-gray-400 mb-1">
             <Clock size={10} />
             <span>{formatPickupWindow(pickupStartTime, pickupEndTime)}</span>
           </div>
+
+          {/* Food age */}
+          {preparedAt && (
+            <div className="flex items-center gap-1 text-[10px] text-brand-600 font-medium mb-2">
+              <span>🌿</span>
+              <span>{formatFoodAge(preparedAt)}</span>
+            </div>
+          )}
 
           {/* Allergen chips */}
           {allergens && allergens.length > 0 && (
