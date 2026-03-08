@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Leaf, ArrowRight, ShoppingBag, Store } from 'lucide-react';
+import { Leaf, ArrowRight, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
 
@@ -18,11 +18,10 @@ export default function SplashPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  // Auto-redirect signed-in users
   useEffect(() => {
     if (!loading && user) {
-      if (!user.role || !user.city) router.replace('/onboarding');
-      else if (user.role === 'provider') router.replace('/dashboard');
+      if (!user.city) router.replace('/onboarding');
+      else if (user.providerStatus === 'approved') router.replace('/dashboard');
       else router.replace('/home');
     }
   }, [user, loading, router]);
@@ -31,9 +30,8 @@ export default function SplashPage() {
 
   return (
     <div className="flex flex-col min-h-full bg-white">
-      {/* Hero gradient */}
+      {/* Hero */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pt-6 pb-4 text-center bg-gradient-to-b from-brand-50 via-white to-white">
-        {/* App icon */}
         <div
           className="mb-5 flex items-center justify-center"
           style={{
@@ -47,21 +45,19 @@ export default function SplashPage() {
           <Leaf size={40} className="text-white" strokeWidth={2} />
         </div>
 
-        {/* Title */}
-        <h1 style={{ fontSize: 30, fontWeight: 800, color: '#111827', letterSpacing: -0.5, lineHeight: 1.15, marginBottom: 10 }}>
-          ShareBite
+        <h1 style={{ fontSize: 30, fontWeight: 800, color: '#111827', letterSpacing: -0.5, lineHeight: 1.15, marginBottom: 6 }}>
+          NibbleNet
         </h1>
+        <p style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, marginBottom: 10, letterSpacing: 0.2 }}>
+          A network for sharing extra food.
+        </p>
         <p style={{ fontSize: 15, color: '#6b7280', lineHeight: 1.55, maxWidth: 260, marginBottom: 28 }}>
-          Rescue surplus food from local restaurants &amp; markets at up to 70% off.
+          Find surplus food from local restaurants, bakeries, and neighbors at up to 70% off.
         </p>
 
-        {/* Feature pills */}
         <div className="w-full max-w-xs space-y-2.5 mb-8">
           {FEATURES.map(({ emoji, text }) => (
-            <div
-              key={text}
-              className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-gray-50"
-            >
+            <div key={text} className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-gray-50">
               <span style={{ fontSize: 20 }}>{emoji}</span>
               <span style={{ fontSize: 13, color: '#374151', fontWeight: 500, textAlign: 'left' }}>{text}</span>
             </div>
@@ -69,9 +65,8 @@ export default function SplashPage() {
         </div>
       </div>
 
-      {/* CTA area */}
+      {/* CTA */}
       <div className="px-5 pb-4 pt-3 space-y-3 bg-white border-t border-gray-50">
-        {/* Stats row */}
         <div className="flex justify-around py-2">
           {[
             { value: '500+', label: 'Providers' },
@@ -98,13 +93,11 @@ export default function SplashPage() {
           </Button>
         </Link>
 
-        {/* Provider link */}
         <div className="flex items-center justify-center gap-1.5 pt-1">
-          <Store size={13} className="text-gray-400" />
-          <Link href="/login?tab=signup&role=provider">
+          <Link href="/login?tab=signup">
             <span style={{ fontSize: 12, color: '#6b7280' }}>
-              Are you a food provider?{' '}
-              <span style={{ color: '#16a34a', fontWeight: 600 }}>List your surplus →</span>
+              Want to share food?{' '}
+              <span style={{ color: '#16a34a', fontWeight: 600 }}>Apply to become a provider →</span>
             </span>
           </Link>
         </div>

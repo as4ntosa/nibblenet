@@ -25,8 +25,8 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      if (!user.role || !user.city) router.replace('/onboarding');
-      else if (user.role === 'provider') router.replace('/dashboard');
+      if (!user.city) router.replace('/onboarding');
+      else if (user.providerStatus === 'approved') router.replace('/dashboard');
       else router.replace('/home');
     }
   }, [user, loading, router]);
@@ -41,8 +41,9 @@ export default function LoginPage() {
       } else {
         if (!name.trim()) throw new Error('Please enter your name');
         await signup(email, password, name);
+        router.replace('/onboarding');
+        return;
       }
-      router.replace('/onboarding');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -52,25 +53,22 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-50 to-white flex flex-col">
-      {/* Header */}
       <div className="px-5 pt-10 pb-6 text-center">
         <Link href="/" className="inline-flex items-center gap-2 mb-6">
           <span className="flex items-center justify-center w-10 h-10 rounded-2xl bg-brand-600">
             <Leaf size={20} className="text-white" />
           </span>
-          <span className="font-bold text-gray-900 text-xl">ShareBite</span>
+          <span className="font-bold text-gray-900 text-xl">NibbleNet</span>
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">
           {tab === 'login' ? 'Welcome back' : 'Create your account'}
         </h1>
         <p className="text-gray-400 text-sm mt-1">
-          {tab === 'login' ? 'Sign in to continue' : 'Start rescuing food today'}
+          {tab === 'login' ? 'Sign in to continue' : 'Start finding surplus food today'}
         </p>
       </div>
 
-      {/* Card */}
       <div className="flex-1 px-5 max-w-sm mx-auto w-full">
-        {/* Demo accounts hint */}
         {tab === 'login' && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4 text-xs text-amber-700">
             <p className="font-semibold mb-1">Demo accounts:</p>
@@ -79,7 +77,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Tabs */}
         <div className="flex bg-gray-100 rounded-xl p-1 mb-5">
           <button
             onClick={() => { setTab('login'); setError(''); }}

@@ -1,5 +1,24 @@
 export type UserRole = 'consumer' | 'provider';
 
+export type ProviderStatus = 'none' | 'pending' | 'approved' | 'rejected';
+
+export type ProviderType =
+  | 'Restaurant'
+  | 'Grocery Store'
+  | 'Bakery / Cafe'
+  | 'Household'
+  | 'Other Food Business';
+
+export type Allergen =
+  | 'peanuts'
+  | 'tree-nuts'
+  | 'dairy'
+  | 'eggs'
+  | 'shellfish'
+  | 'soy'
+  | 'gluten'
+  | 'sesame';
+
 export type Category =
   | 'Fruits'
   | 'Vegetables'
@@ -32,10 +51,16 @@ export interface User {
   city?: string;
   zipCode?: string;
   avatarUrl?: string;
-  businessName?: string;
-  businessType?: string;
   phone?: string;
   bio?: string;
+  allergies?: Allergen[];
+  providerStatus?: ProviderStatus;
+  providerType?: ProviderType;
+  businessName?: string;
+  businessType?: string;
+  safetyPolicyAccepted?: boolean;
+  integrityPolicyAccepted?: boolean;
+  foodSafetyAccepted?: boolean;
 }
 
 export interface Listing {
@@ -48,6 +73,7 @@ export interface Listing {
   description: string;
   category: Category;
   tags: CuisineTag[];
+  allergens?: Allergen[];
   price: number;
   originalPrice?: number;
   quantity: number;
@@ -87,4 +113,5 @@ export interface ListingFilters {
   maxPrice?: number;
   city?: string;
   tags?: CuisineTag[];
+  excludeAllergens?: Allergen[];
 }

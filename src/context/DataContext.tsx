@@ -97,6 +97,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (filters.tags && filters.tags.length > 0) {
       results = results.filter((l) => filters.tags!.some((t) => l.tags.includes(t)));
     }
+    if (filters.excludeAllergens && filters.excludeAllergens.length > 0) {
+      results = results.filter(
+        (l) => !filters.excludeAllergens!.some((a) => l.allergens?.includes(a))
+      );
+    }
     return results;
   };
 
@@ -145,7 +150,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       quantity: qty,
       totalPrice: listing.price * qty,
       status: 'confirmed',
-      confirmationCode: `SB-${generateCode()}`,
+      confirmationCode: `NN-${generateCode()}`,
       createdAt: new Date().toISOString(),
     };
     dispatch({ type: 'ADD_RESERVATION', reservation });

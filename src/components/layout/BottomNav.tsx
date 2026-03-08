@@ -2,23 +2,29 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, ShoppingBag, User } from 'lucide-react';
+import { Home, Search, ShoppingBag, User, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-const CONSUMER_NAV = [
-  { href: '/home', label: 'Home', icon: Home },
-  { href: '/search', label: 'Search', icon: Search },
-  { href: '/reservations', label: 'Orders', icon: ShoppingBag },
-  { href: '/profile', label: 'Profile', icon: User },
-];
+import { useAuth } from '@/context/AuthContext';
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const isApprovedProvider = user?.providerStatus === 'approved';
+
+  const navItems = [
+    { href: '/home', label: 'Home', icon: Home },
+    { href: '/search', label: 'Search', icon: Search },
+    { href: '/reservations', label: 'Orders', icon: ShoppingBag },
+    ...(isApprovedProvider
+      ? [{ href: '/dashboard', label: 'Provider', icon: LayoutDashboard }]
+      : []),
+    { href: '/profile', label: 'Profile', icon: User },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100">
       <div className="flex items-stretch">
-        {CONSUMER_NAV.map(({ href, label, icon: Icon }) => {
+        {navItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/');
           return (
             <Link

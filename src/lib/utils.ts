@@ -99,3 +99,25 @@ export const STATUS_COLOR: Record<ListingStatus, string> = {
   sold_out: 'bg-gray-100 text-gray-500',
   expired: 'bg-red-100 text-red-500',
 };
+
+export const ALLERGENS = [
+  'peanuts',
+  'tree-nuts',
+  'dairy',
+  'eggs',
+  'shellfish',
+  'soy',
+  'gluten',
+  'sesame',
+] as const;
+
+export const ALLERGEN_LABEL: Record<string, string> = {
+  peanuts: 'Peanuts',
+  'tree-nuts': 'Tree Nuts',
+  dairy: 'Dairy',
+  eggs: 'Eggs',
+  shellfish: 'Shellfish',
+  soy: 'Soy',
+  gluten: 'Gluten',
+  sesame: 'Sesame',
+};

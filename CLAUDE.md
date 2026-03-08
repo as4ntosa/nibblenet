@@ -14,22 +14,30 @@ No test runner is configured beyond Playwright (no `npm test` script). Playwrigh
 
 ## Architecture
 
-**ShareBite** is a food surplus marketplace — a client-side Next.js 14 app (App Router) with no backend. All data is mocked and persisted via `localStorage`.
+**NibbleNet** is a food surplus marketplace — a client-side Next.js app (App Router) with no backend. All data is mocked and persisted via `localStorage`.
 
 ### State Management
 
 Two React Contexts power the app:
 
-- `AuthContext` (`src/context/AuthContext.tsx`) — user session, role, localStorage persistence. Methods: `login`, `signup`, `logout`, `updateProfile`, `setRole`.
-- `DataContext` (`src/context/DataContext.tsx`) — listings and reservations via `useReducer`. All filtering/searching is done in-memory on the client.
+- `AuthContext` (`src/context/AuthContext.tsx`) — user session, provider status, localStorage persistence. Methods: `login`, `signup`, `logout`, `updateProfile`, `setRole`, `applyForProvider`, `approveProvider`.
+- `DataContext` (`src/context/DataContext.tsx`) — listings and reservations via `useReducer`. All filtering/searching is done in-memory on the client. Supports allergen exclusion filtering.
 
-### Route Groups & Roles
+### User Model
 
-Users have one of two roles which determines their routing:
+All users start as standard consumers. Provider access requires completing a separate approval flow:
 
-- **Consumer** routes live under `src/app/(consumer)/` — home feed, search, listing detail, reservations, profile
-- **Provider** routes live under `src/app/(provider)/` — dashboard, listings management, create listing, provider profile
-- Auth routes: `/login`, `/onboarding`
+- `providerStatus: 'none'` — default, browse only
+- `providerStatus: 'pending'` — application submitted, awaiting review
+- `providerStatus: 'approved'` — full provider access
+- `providerStatus: 'rejected'` — application denied
+
+### Route Groups
+
+- **Consumer** routes under `src/app/(consumer)/` — accessible to all logged-in users
+- **Provider** routes under `src/app/(provider)/` — gated to `providerStatus === 'approved'` only
+- **Auth routes**: `/login`, `/onboarding`
+- **Provider flow**: `/become-a-provider`, `/provider-apply`, `/provider-pending`
 
 ### Key Conventions
 
@@ -39,3 +47,5 @@ Users have one of two roles which determines their routing:
 - Mobile-first layout; `iPhoneFrame` component wraps content for desktop preview
 - Remote images only from `images.unsplash.com` (configured in `next.config.js`)
 - Mock data lives in `src/lib/mock-data.ts`; shared types in `src/types/index.ts`
+- localStorage key: `nibblen_user` (was `sharebite_user`)
+- Confirmation codes prefixed `NN-` (was `SB-`)

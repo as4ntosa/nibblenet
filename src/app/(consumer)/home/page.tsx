@@ -22,7 +22,11 @@ export default function HomePage() {
     return (cat as Category) || '';
   });
 
-  const rawListings = getListings(activeCategory ? { category: activeCategory } : undefined);
+  const userAllergies = user?.allergies && user.allergies.length > 0 ? user.allergies : undefined;
+  const rawListings = getListings({
+    ...(activeCategory ? { category: activeCategory } : {}),
+    ...(userAllergies ? { excludeAllergens: userAllergies } : {}),
+  });
 
   // Enrich with real distances when we have coords, then sort nearest first
   const listings: Listing[] = coords

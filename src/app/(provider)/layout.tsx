@@ -12,8 +12,8 @@ export default function ProviderLayout({ children }: { children: React.ReactNode
   useEffect(() => {
     if (loading) return;
     if (!user) router.replace('/login');
-    else if (!user.role) router.replace('/onboarding');
-    else if (user.role === 'consumer') router.replace('/home');
+    else if (!user.city) router.replace('/onboarding');
+    else if (user.providerStatus !== 'approved') router.replace('/become-a-provider');
   }, [user, loading, router]);
 
   if (loading || !user) return null;
