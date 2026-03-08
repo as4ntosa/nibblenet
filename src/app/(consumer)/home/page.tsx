@@ -2,14 +2,17 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Search, MapPin, Navigation, Loader2, Leaf, AlertCircle } from 'lucide-react';
+import { Search, MapPin, Navigation, Loader2, Leaf, AlertCircle, LayoutGrid, Map } from 'lucide-react';
 import Link from 'next/link';
 import { ListingCard } from '@/components/listing/ListingCard';
+import { ListingsMap } from '@/components/map/ListingsMap';
 import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
 import { Category, Listing } from '@/types';
 import { CATEGORIES, CATEGORY_EMOJI, cn, haversineKm } from '@/lib/utils';
 import { useGeolocation } from '@/hooks/useGeolocation';
+
+type ViewMode = 'list' | 'map';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -21,6 +24,7 @@ export default function HomePage() {
     const cat = searchParams.get('category');
     return (cat as Category) || '';
   });
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const userAllergies = user?.allergies && user.allergies.length > 0 ? user.allergies : undefined;
   const rawListings = getListings({
@@ -148,9 +152,36 @@ export default function HomePage() {
             {activeCategory ? activeCategory : status === 'granted' ? 'Nearest to you' : 'Nearby Listings'}
             <span className="text-gray-400 font-normal ml-1">({listings.length})</span>
           </h2>
-          <Link href="/search" className="text-xs text-brand-600 font-medium">
-            See all
-          </Link>
+          <div className="flex items-center gap-2">
+            {/* List / Map toggle */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+              <button
+                onClick={() => setViewMode('list')}
+                className={cn(
+                  'flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold transition-colors',
+                  viewMode === 'list' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'
+                )}
+                aria-label="List view"
+              >
+                <LayoutGrid size={12} />
+                List
+              </button>
+              <button
+                onClick={() => { setViewMode('map'); if (status === 'idle') request(); }}
+                className={cn(
+                  'flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-semibold transition-colors',
+                  viewMode === 'map' ? 'bg-white shadow-sm text-gray-800' : 'text-gray-400 hover:text-gray-600'
+                )}
+                aria-label="Map view"
+              >
+                <Map size={12} />
+                Map
+              </button>
+            </div>
+            <Link href="/search" className="text-xs text-brand-600 font-medium">
+              See all
+            </Link>
+          </div>
         </div>
 
         {/* Impact counter */}
@@ -195,13 +226,23 @@ export default function HomePage() {
           </div>
         )}
 
-        {listings.length === 0 ? (
+        {viewMode === 'map' ? (
+          /* ── Map view ─────────────────────────────────────────── */
+          <ListingsMap
+            listings={listings}
+            userCoords={coords}
+            className="w-full"
+            style={{ height: 'calc(100vh - 320px)', minHeight: 360 }}
+          />
+        ) : listings.length === 0 ? (
+          /* ── Empty state ──────────────────────────────────────── */
           <div className="text-center py-16">
             <div className="text-5xl mb-4">🍃</div>
             <h3 className="text-base font-semibold text-gray-700 mb-1">No listings found</h3>
             <p className="text-sm text-gray-400">Try a different category or check back later</p>
           </div>
         ) : (
+          /* ── List view ────────────────────────────────────────── */
           <div className="grid grid-cols-2 gap-3">
             {listings.map((listing) => (
               <ListingCard key={listing.id} listing={listing} />

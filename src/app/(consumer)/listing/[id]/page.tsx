@@ -15,6 +15,7 @@ import {
   formatPrice, discountPercent, formatPickupWindow, CATEGORY_EMOJI,
   STATUS_LABEL, timeUntil, cn, ALLERGEN_LABEL,
 } from '@/lib/utils';
+import { PickupMap } from '@/components/map/PickupMap';
 
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -173,6 +174,15 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
               <p className="text-xs font-semibold text-gray-500 mb-1">Instructions</p>
               <p className="text-sm text-gray-600">{pickupInstructions}</p>
             </div>
+          )}
+
+          {/* Pickup location map */}
+          {listing.pickupLat != null && listing.pickupLng != null && (
+            <PickupMap
+              lat={listing.pickupLat}
+              lng={listing.pickupLng}
+              address={`${pickupAddress}, ${pickupCity}`}
+            />
           )}
         </div>
 
