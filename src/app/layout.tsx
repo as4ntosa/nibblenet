@@ -5,8 +5,8 @@ import { DataProvider } from '@/context/DataContext';
 import { IPhoneFrame } from '@/components/layout/iPhoneFrame';
 
 export const metadata: Metadata = {
-  title: 'NibbleNet — A network for sharing extra food.',
-  description: 'Connect with local food providers offering surplus food at incredible prices. Save money, reduce waste.',
+  title: 'NibbleNet — Fantastic Fantosa Corporations',
+  description: 'A network for sharing extra food. Connect with local food providers offering surplus food at incredible prices. Save money, reduce waste.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

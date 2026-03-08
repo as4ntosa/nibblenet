@@ -3,8 +3,9 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Leaf, ArrowRight, ShoppingBag } from 'lucide-react';
+import { ArrowRight, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Logo } from '@/components/ui/Logo';
 import { useAuth } from '@/context/AuthContext';
 
 const FEATURES = [
@@ -32,22 +33,15 @@ export default function SplashPage() {
     <div className="flex flex-col min-h-full bg-white">
       {/* Hero */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pt-6 pb-4 text-center bg-gradient-to-b from-brand-50 via-white to-white">
-        <div
-          className="mb-5 flex items-center justify-center"
-          style={{
-            width: 88,
-            height: 88,
-            borderRadius: 24,
-            background: 'linear-gradient(145deg, #22c55e, #15803d)',
-            boxShadow: '0 8px 32px rgba(22,163,74,0.35)',
-          }}
-        >
-          <Leaf size={40} className="text-white" strokeWidth={2} />
-        </div>
+        {/* Logo mark */}
+        <Logo size={88} showName={false} className="mb-4" />
 
-        <h1 style={{ fontSize: 30, fontWeight: 800, color: '#111827', letterSpacing: -0.5, lineHeight: 1.15, marginBottom: 6 }}>
+        <h1 style={{ fontSize: 30, fontWeight: 800, color: '#111827', letterSpacing: -0.5, lineHeight: 1.15, marginBottom: 4 }}>
           NibbleNet
         </h1>
+        <p style={{ fontSize: 11, color: '#f97316', fontWeight: 700, marginBottom: 4, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+          Fantastic Fantosa Corporations
+        </p>
         <p style={{ fontSize: 12, color: '#16a34a', fontWeight: 600, marginBottom: 10, letterSpacing: 0.2 }}>
           A network for sharing extra food.
         </p>
