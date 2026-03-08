@@ -100,6 +100,28 @@ export const STATUS_COLOR: Record<ListingStatus, string> = {
   expired: 'bg-red-100 text-red-500',
 };
 
+export const ALLERGENS = [
+  'peanuts',
+  'tree-nuts',
+  'dairy',
+  'eggs',
+  'shellfish',
+  'soy',
+  'gluten',
+  'sesame',
+] as const;
+
+export const ALLERGEN_LABEL: Record<string, string> = {
+  peanuts: 'Peanuts',
+  'tree-nuts': 'Tree Nuts',
+  dairy: 'Dairy',
+  eggs: 'Eggs',
+  shellfish: 'Shellfish',
+  soy: 'Soy',
+  gluten: 'Gluten',
+  sesame: 'Sesame',
+};
+
 export const SURPRISE_BOX_SIZES: SurpriseBoxSize[] = ['small', 'medium', 'large'];
 
 export const SURPRISE_BOX_LABELS: Record<SurpriseBoxSize, string> = {

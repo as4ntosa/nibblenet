@@ -12,8 +12,7 @@ export default function ConsumerLayout({ children }: { children: React.ReactNode
   useEffect(() => {
     if (loading) return;
     if (!user) router.replace('/login');
-    else if (!user.role) router.replace('/onboarding');
-    else if (user.role === 'provider') router.replace('/dashboard');
+    else if (!user.city) router.replace('/onboarding');
   }, [user, loading, router]);
 
   if (loading || !user) return null;

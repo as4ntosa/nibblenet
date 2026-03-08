@@ -9,7 +9,7 @@ import { useData } from '@/context/DataContext';
 
 export default function ReservationsPage() {
   const { user } = useAuth();
-  const { getConsumerReservations, cancelReservation } = useData();
+  const { getConsumerReservations, cancelReservation, confirmPickup, cancelAtPickup } = useData();
 
   const reservations = user ? getConsumerReservations(user.id) : [];
   const active = reservations.filter((r) => r.status === 'confirmed');
@@ -44,7 +44,7 @@ export default function ReservationsPage() {
                 </h2>
                 <div className="space-y-3">
                   {active.map((r) => (
-                    <ReservationCard key={r.id} reservation={r} onCancel={cancelReservation} />
+                    <ReservationCard key={r.id} reservation={r} onCancel={cancelReservation} onConfirmPickup={confirmPickup} onCancelAtPickup={cancelAtPickup} />
                   ))}
                 </div>
               </div>

@@ -1,5 +1,24 @@
 export type UserRole = 'consumer' | 'provider';
 
+export type ProviderStatus = 'none' | 'pending' | 'approved' | 'rejected';
+
+export type ProviderType =
+  | 'Restaurant'
+  | 'Grocery Store'
+  | 'Bakery / Cafe'
+  | 'Household'
+  | 'Other Food Business';
+
+export type Allergen =
+  | 'peanuts'
+  | 'tree-nuts'
+  | 'dairy'
+  | 'eggs'
+  | 'shellfish'
+  | 'soy'
+  | 'gluten'
+  | 'sesame';
+
 export type Category =
   | 'Fruits'
   | 'Vegetables'
@@ -22,9 +41,9 @@ export type CuisineTag =
 
 export type ListingStatus = 'available' | 'reserved' | 'sold_out' | 'expired';
 
-export type SurpriseBoxSize = 'small' | 'medium' | 'large';
+export type ReservationStatus = 'confirmed' | 'picked_up' | 'cancelled' | 'cancelled_at_pickup';
 
-export type ReservationStatus = 'confirmed' | 'picked_up' | 'cancelled';
+export type SurpriseBoxSize = 'small' | 'medium' | 'large';
 
 export interface User {
   id: string;
@@ -34,10 +53,16 @@ export interface User {
   city?: string;
   zipCode?: string;
   avatarUrl?: string;
-  businessName?: string;
-  businessType?: string;
   phone?: string;
   bio?: string;
+  allergies?: Allergen[];
+  providerStatus?: ProviderStatus;
+  providerType?: ProviderType;
+  businessName?: string;
+  businessType?: string;
+  safetyPolicyAccepted?: boolean;
+  integrityPolicyAccepted?: boolean;
+  foodSafetyAccepted?: boolean;
   waiverSigned?: boolean;
   waiverSignedAt?: string;
 }
@@ -52,6 +77,7 @@ export interface Listing {
   description: string;
   category: Category;
   tags: CuisineTag[];
+  allergens?: Allergen[];
   price: number;
   originalPrice?: number;
   quantity: number;
@@ -66,11 +92,13 @@ export interface Listing {
   pickupEndTime: string;
   pickupInstructions?: string;
   imageUrl: string;
+  isRescueBundle?: boolean;
+  isCommunityPantry?: boolean;
+  isSurpriseBox?: boolean;
+  surpriseBoxSize?: SurpriseBoxSize;
   createdAt: string;
   expiresAt: string;
   distance?: number;
-  isSurpriseBox?: boolean;
-  surpriseBoxSize?: SurpriseBoxSize;
 }
 
 export interface Reservation {
@@ -93,4 +121,5 @@ export interface ListingFilters {
   maxPrice?: number;
   city?: string;
   tags?: CuisineTag[];
+  excludeAllergens?: Allergen[];
 }

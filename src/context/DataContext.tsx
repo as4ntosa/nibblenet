@@ -56,6 +56,8 @@ interface DataContextValue {
   deleteListing: (id: string) => void;
   reserveListing: (listing: Listing, consumerId: string, consumerName: string, qty: number) => Reservation;
   cancelReservation: (id: string) => void;
+  confirmPickup: (id: string) => void;
+  cancelAtPickup: (id: string) => void;
 }
 
 const DataContext = createContext<DataContextValue | null>(null);
@@ -96,6 +98,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     }
     if (filters.tags && filters.tags.length > 0) {
       results = results.filter((l) => filters.tags!.some((t) => l.tags.includes(t)));
+    }
+    if (filters.excludeAllergens && filters.excludeAllergens.length > 0) {
+      results = results.filter(
+        (l) => !filters.excludeAllergens!.some((a) => l.allergens?.includes(a))
+      );
     }
     return results;
   };
@@ -145,7 +152,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       quantity: qty,
       totalPrice: listing.price * qty,
       status: 'confirmed',
-      confirmationCode: `SB-${generateCode()}`,
+      confirmationCode: `NN-${generateCode()}`,
       createdAt: new Date().toISOString(),
     };
     dispatch({ type: 'ADD_RESERVATION', reservation });
@@ -173,6 +180,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const confirmPickup = (id: string) => {
+    dispatch({ type: 'UPDATE_RESERVATION', id, status: 'picked_up' });
+  };
+
+  const cancelAtPickup = (id: string) => {
+    const res = state.reservations.find((r) => r.id === id);
+    if (!res) return;
+    dispatch({ type: 'UPDATE_RESERVATION', id, status: 'cancelled_at_pickup' });
+    dispatch({
+      type: 'UPDATE_LISTING',
+      id: res.listingId,
+      data: {
+        quantityReserved: Math.max(0, res.listing.quantityReserved - res.quantity),
+        status: 'available',
+      },
+    });
+  };
+
   return (
     <DataContext.Provider
       value={{
@@ -187,6 +212,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         deleteListing,
         reserveListing,
         cancelReservation,
+        confirmPickup,
+        cancelAtPickup,
       }}
     >
       {children}

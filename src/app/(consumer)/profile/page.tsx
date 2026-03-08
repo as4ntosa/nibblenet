@@ -1,21 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { LogOut, ChevronRight, MapPin, Mail, Phone, Edit3, Store, HelpCircle, Bell } from 'lucide-react';
+import { LogOut, ChevronRight, MapPin, Mail, Phone, Edit3, Store, HelpCircle, Bell, AlertCircle, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { useAuth } from '@/context/AuthContext';
+import { Allergen } from '@/types';
+import { ALLERGENS, ALLERGEN_LABEL, cn } from '@/lib/utils';
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, logout, updateProfile } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
+  const [allergyOpen, setAllergyOpen] = useState(false);
   const [name, setName] = useState(user?.name || '');
   const [city, setCity] = useState(user?.city || '');
   const [zipCode, setZipCode] = useState(user?.zipCode || '');
   const [phone, setPhone] = useState(user?.phone || '');
+  const [selectedAllergies, setSelectedAllergies] = useState<Allergen[]>(user?.allergies || []);
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -26,6 +31,20 @@ export default function ProfilePage() {
     setEditOpen(false);
   };
 
+  const handleSaveAllergies = async () => {
+    setSaving(true);
+    await new Promise((r) => setTimeout(r, 300));
+    updateProfile({ allergies: selectedAllergies });
+    setSaving(false);
+    setAllergyOpen(false);
+  };
+
+  const toggleAllergen = (a: Allergen) => {
+    setSelectedAllergies((prev) =>
+      prev.includes(a) ? prev.filter((x) => x !== a) : [...prev, a]
+    );
+  };
+
   const handleLogout = () => {
     logout();
     router.replace('/');
@@ -33,21 +52,32 @@ export default function ProfilePage() {
 
   if (!user) return null;
 
+  const providerStatus = user.providerStatus ?? 'none';
+
   return (
     <div>
       {/* Header */}
       <div className="bg-white px-4 pt-12 pb-6 text-center">
         <div className="w-20 h-20 rounded-full bg-brand-100 flex items-center justify-center mx-auto mb-3">
-          <span className="text-3xl font-bold text-brand-600">
-            {user.name.charAt(0)}
-          </span>
+          <span className="text-3xl font-bold text-brand-600">{user.name.charAt(0)}</span>
         </div>
         <h1 className="text-xl font-bold text-gray-900">{user.name}</h1>
         <p className="text-sm text-gray-400 mt-0.5">{user.email}</p>
-        <div className="flex items-center justify-center gap-1 mt-2">
+        <div className="flex items-center justify-center gap-2 mt-2">
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-100 text-brand-700 text-xs font-medium">
-            Consumer
+            NibbleNet Member
           </span>
+          {providerStatus === 'approved' && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-medium">
+              Approved Provider
+            </span>
+          )}
+          {providerStatus === 'pending' && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-medium">
+              <Clock size={10} />
+              Provider Pending
+            </span>
+          )}
         </div>
       </div>
 
@@ -55,7 +85,7 @@ export default function ProfilePage() {
         {/* Info card */}
         <div className="bg-white rounded-2xl shadow-card overflow-hidden">
           {[
-            { icon: MapPin, label: 'Location', value: user.city ? `${user.city}, ${user.zipCode || ''}` : 'Not set' },
+            { icon: MapPin, label: 'Location', value: user.city ? `${user.city}${user.zipCode ? `, ${user.zipCode}` : ''}` : 'Not set' },
             { icon: Mail, label: 'Email', value: user.email },
             { icon: Phone, label: 'Phone', value: user.phone || 'Not set' },
           ].map(({ icon: Icon, label, value }, i) => (
@@ -69,6 +99,27 @@ export default function ProfilePage() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Allergy profile */}
+        <div className="bg-white rounded-2xl shadow-card overflow-hidden">
+          <button
+            onClick={() => { setSelectedAllergies(user.allergies || []); setAllergyOpen(true); }}
+            className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors"
+          >
+            <div className="w-8 h-8 rounded-xl bg-red-50 flex items-center justify-center shrink-0">
+              <AlertCircle size={14} className="text-red-400" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-sm font-medium text-gray-700">Allergy & Sensitivity Profile</p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {user.allergies && user.allergies.length > 0
+                  ? user.allergies.map((a) => ALLERGEN_LABEL[a]).join(', ')
+                  : 'None set — tap to configure'}
+              </p>
+            </div>
+            <ChevronRight size={16} className="text-gray-300" />
+          </button>
         </div>
 
         {/* Actions */}
@@ -92,18 +143,36 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* Switch to provider */}
-        <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-              <Store size={18} className="text-amber-600" />
+        {/* Provider section */}
+        {providerStatus === 'none' && (
+          <Link href="/become-a-provider">
+            <div className="bg-amber-50 rounded-2xl border border-amber-100 p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                <Store size={18} className="text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-800">Have food to share?</p>
+                <p className="text-xs text-gray-500 mt-0.5">Apply to become an approved NibbleNet provider</p>
+              </div>
+              <ChevronRight size={16} className="text-amber-400" />
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-gray-800">Have food to share?</p>
-              <p className="text-xs text-gray-500 mt-0.5">Switch to a provider account and list your surplus</p>
+          </Link>
+        )}
+
+        {providerStatus === 'pending' && (
+          <Link href="/provider-pending">
+            <div className="bg-blue-50 rounded-2xl border border-blue-100 p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                <Clock size={18} className="text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-gray-800">Application Under Review</p>
+                <p className="text-xs text-gray-500 mt-0.5">Tap to check your provider approval status</p>
+              </div>
+              <ChevronRight size={16} className="text-blue-400" />
             </div>
-          </div>
-        </div>
+          </Link>
+        )}
 
         <button
           onClick={handleLogout}
@@ -116,7 +185,7 @@ export default function ProfilePage() {
         </button>
       </div>
 
-      {/* Edit modal */}
+      {/* Edit Profile Modal */}
       <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Edit Profile">
         <div className="space-y-3">
           <Input label="Full Name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -125,6 +194,35 @@ export default function ProfilePage() {
           <Input label="Phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
           <Button fullWidth onClick={handleSave} loading={saving} className="mt-2">
             Save Changes
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Allergy Profile Modal */}
+      <Modal open={allergyOpen} onClose={() => setAllergyOpen(false)} title="Allergy & Sensitivity Profile">
+        <div className="space-y-4">
+          <p className="text-xs text-gray-500">
+            Select any allergens. Listings containing these will be automatically hidden from your home feed.
+            You can still find them via search.
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {ALLERGENS.map((a) => (
+              <button
+                key={a}
+                onClick={() => toggleAllergen(a as Allergen)}
+                className={cn(
+                  'px-3 py-2.5 rounded-xl border text-sm font-medium transition-colors text-left',
+                  selectedAllergies.includes(a as Allergen)
+                    ? 'border-red-400 bg-red-50 text-red-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                )}
+              >
+                {ALLERGEN_LABEL[a]}
+              </button>
+            ))}
+          </div>
+          <Button fullWidth onClick={handleSaveAllergies} loading={saving}>
+            Save Preferences
           </Button>
         </div>
       </Modal>

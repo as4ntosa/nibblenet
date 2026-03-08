@@ -5,7 +5,7 @@ import { DataProvider } from '@/context/DataContext';
 import { IPhoneFrame } from '@/components/layout/iPhoneFrame';
 
 export const metadata: Metadata = {
-  title: 'ShareBite — Rescue food. Feed your community.',
+  title: 'NibbleNet — A network for sharing extra food.',
   description: 'Connect with local food providers offering surplus food at incredible prices. Save money, reduce waste.',
 };
 

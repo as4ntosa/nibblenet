@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import {
-  ArrowLeft, MapPin, Clock, Store, ShoppingBag, Minus, Plus, CheckCircle, Share2, Gift
+  ArrowLeft, MapPin, Clock, Store, ShoppingBag, Minus, Plus, CheckCircle, Share2, ShieldCheck, AlertTriangle, Flag
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -13,7 +13,7 @@ import { useData } from '@/context/DataContext';
 import { useAuth } from '@/context/AuthContext';
 import {
   formatPrice, discountPercent, formatPickupWindow, CATEGORY_EMOJI,
-  STATUS_LABEL, timeUntil, cn, SURPRISE_BOX_LABELS, SURPRISE_BOX_DESCRIPTIONS,
+  STATUS_LABEL, timeUntil, cn, ALLERGEN_LABEL,
 } from '@/lib/utils';
 
 export default function ListingDetailPage({ params }: { params: { id: string } }) {
@@ -25,6 +25,7 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const [qty, setQty] = useState(1);
   const [reserving, setReserving] = useState(false);
   const [reserved, setReserved] = useState<{ code: string; total: number } | null>(null);
+  const [reported, setReported] = useState(false);
 
   if (!listing) {
     return (
@@ -37,10 +38,9 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   }
 
   const {
-    title, businessName, businessType, description, category, tags, price, originalPrice,
+    title, businessName, businessType, description, category, tags, allergens, price, originalPrice,
     quantity, quantityReserved, status, pickupAddress, pickupCity, pickupZip,
-    pickupStartTime, pickupEndTime, pickupInstructions, imageUrl, expiresAt, distance,
-    isSurpriseBox, surpriseBoxSize,
+    pickupStartTime, pickupEndTime, pickupInstructions, imageUrl, expiresAt, distance, isRescueBundle, isSurpriseBox, surpriseBoxSize,
   } = listing;
 
   const remaining = quantity - quantityReserved;
@@ -77,17 +77,12 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
           <Share2 size={16} className="text-gray-700" />
         </button>
 
-        {/* Surprise box / Discount */}
-        {isSurpriseBox && surpriseBoxSize ? (
-          <div className="absolute bottom-4 left-4 bg-purple-500 text-white text-sm font-bold px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-            <Gift size={14} />
-            {SURPRISE_BOX_LABELS[surpriseBoxSize]}
-          </div>
-        ) : discount ? (
+        {/* Discount */}
+        {discount && (
           <div className="absolute bottom-4 left-4 bg-red-500 text-white text-sm font-bold px-2.5 py-1 rounded-xl">
             -{discount}% off
           </div>
-        ) : null}
+        )}
 
         {/* Timer */}
         {isAvailable && (
@@ -102,9 +97,6 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
       <div className="px-4 pt-5 pb-32">
         {/* Category + status */}
         <div className="flex flex-wrap gap-2 mb-3">
-          {isSurpriseBox && (
-            <Badge variant="purple">Surprise Box</Badge>
-          )}
           <Badge>{CATEGORY_EMOJI[category]} {category}</Badge>
           {tags.map((tag) => (
             <Badge key={tag} variant="blue">{tag}</Badge>
@@ -141,28 +133,8 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
 
         {/* Description */}
         <div className="mb-5">
-          {isSurpriseBox && surpriseBoxSize ? (
-            <>
-              <h2 className="text-sm font-semibold text-gray-700 mb-2">Surprise Box</h2>
-              <div className="bg-purple-50 rounded-2xl p-4 border border-purple-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <Gift size={18} className="text-purple-500" />
-                  <span className="text-sm font-semibold text-purple-700">{SURPRISE_BOX_LABELS[surpriseBoxSize]}</span>
-                </div>
-                <p className="text-sm text-purple-600 mb-2">
-                  {SURPRISE_BOX_DESCRIPTIONS[surpriseBoxSize]}
-                </p>
-                <p className="text-xs text-purple-400">
-                  Contents are a surprise! You won&apos;t know exactly what&apos;s inside until pickup.
-                </p>
-              </div>
-            </>
-          ) : (
-            <>
-              <h2 className="text-sm font-semibold text-gray-700 mb-2">About this listing</h2>
-              <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
-            </>
-          )}
+          <h2 className="text-sm font-semibold text-gray-700 mb-2">About this listing</h2>
+          <p className="text-sm text-gray-500 leading-relaxed">{description}</p>
         </div>
 
         {/* Pickup info */}
@@ -210,6 +182,63 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
           <span className="text-sm font-semibold text-brand-700">
             {remaining} of {quantity} remaining
           </span>
+        </div>
+
+        {/* Rescue / surprise box notice */}
+        {(isRescueBundle || isSurpriseBox) && (
+          <div className="bg-brand-50 border border-brand-100 rounded-2xl p-4 mb-4">
+            <p className="text-xs font-bold text-brand-700 mb-1">
+              🎁 {isSurpriseBox ? `Mystery ${surpriseBoxSize === 'small' ? 'Small' : surpriseBoxSize === 'medium' ? 'Medium' : 'Large'} Box` : 'Rescue Bundle'}
+            </p>
+            <p className="text-xs text-brand-600 leading-relaxed">
+              This is a mystery surplus box — exact contents vary. All allergens are disclosed below. You have the right to inspect the contents at pickup before accepting.
+            </p>
+          </div>
+        )}
+
+        {/* Allergen information */}
+        {allergens && allergens.length > 0 && (
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle size={14} className="text-red-500 shrink-0" />
+              <p className="text-xs font-bold text-red-700">Contains Allergens</p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {allergens.map((a) => (
+                <span key={a} className="text-xs font-semibold bg-white text-red-600 border border-red-200 px-2 py-0.5 rounded-lg">
+                  {ALLERGEN_LABEL[a]}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Pickup inspection rights */}
+        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 mb-4">
+          <div className="flex items-start gap-2">
+            <ShieldCheck size={14} className="text-brand-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold text-gray-700 mb-1">Your pickup rights</p>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                You have the right to inspect this item at pickup. If it doesn't match the listing or appears unsafe, you may cancel on-site at no charge. Providers are required to accept this.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Report listing */}
+        <div className="text-center pb-4">
+          {reported ? (
+            <p className="text-xs text-gray-400">Report received — our team will review this listing.</p>
+          ) : (
+            <button
+              onClick={() => setReported(true)}
+              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-red-500 transition-colors mx-auto"
+            >
+              <Flag size={12} />
+              Report this listing
+            </button>
+          )}
         </div>
       </div>
 
@@ -295,6 +324,13 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
               <p className="text-xs text-gray-400">Location</p>
               <p className="text-sm font-semibold text-gray-800">{pickupAddress}, {pickupCity}</p>
             </div>
+          </div>
+
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4 text-left">
+            <ShieldCheck size={13} className="text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-700 leading-relaxed">
+              You may inspect this item at pickup. If it doesn't match the listing, you can cancel on-site at no charge.
+            </p>
           </div>
 
           <Button

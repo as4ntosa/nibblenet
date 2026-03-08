@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, UserRole } from '@/types';
+import { User, UserRole, ProviderStatus, ProviderType, Allergen } from '@/types';
 import { DEMO_USERS } from '@/lib/mock-data';
 import { generateId } from '@/lib/utils';
 
@@ -13,18 +13,22 @@ interface AuthContextValue {
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
   setRole: (role: UserRole) => void;
+  applyForProvider: (data: {
+    providerType: ProviderType;
+    businessName?: string;
+    safetyPolicyAccepted: boolean;
+    integrityPolicyAccepted: boolean;
+    foodSafetyAccepted: boolean;
+  }) => void;
+  approveProvider: () => void; // demo-only instant approval
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-const STORAGE_KEY = 'sharebite_user';
+const STORAGE_KEY = 'nibblen_user';
 
-// Simulated password store (for demo purposes only)
 const DEMO_PASSWORDS: Record<string, string> = {
-  'consumer@demo.com': 'demo123',
-  'provider@demo.com': 'demo123',
-  'bakery@demo.com': 'demo123',
-  'market@demo.com': 'demo123',
+  'demo@nibblen.com': 'demo123',
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -46,14 +50,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const login = async (email: string, password: string) => {
-    await new Promise((r) => setTimeout(r, 600)); // simulate network
+    await new Promise((r) => setTimeout(r, 600));
     const demo = DEMO_USERS.find((u) => u.email === email);
     if (demo && DEMO_PASSWORDS[email] === password) {
       persist(demo);
       return;
     }
-    // Check localStorage-created accounts
-    const stored = localStorage.getItem(`sharebite_account_${email}`);
+    const stored = localStorage.getItem(`nibblen_account_${email}`);
     if (stored) {
       const account = JSON.parse(stored);
       if (account.password === password) {
@@ -67,43 +70,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (email: string, password: string, name: string) => {
     await new Promise((r) => setTimeout(r, 600));
     const existing = DEMO_USERS.find((u) => u.email === email);
-    if (existing || localStorage.getItem(`sharebite_account_${email}`)) {
+    if (existing || localStorage.getItem(`nibblen_account_${email}`)) {
       throw new Error('An account with this email already exists');
     }
     const newUser: User = {
       id: generateId(),
       email,
       name,
-      role: 'consumer', // default; changed during onboarding
+      role: 'consumer',
+      providerStatus: 'none',
     };
     localStorage.setItem(
-      `sharebite_account_${email}`,
+      `nibblen_account_${email}`,
       JSON.stringify({ password, user: newUser })
     );
     persist(newUser);
   };
 
-  const logout = () => {
-    persist(null);
-  };
+  const logout = () => persist(null);
 
   const updateProfile = (data: Partial<User>) => {
     if (!user) return;
     const updated = { ...user, ...data };
     persist(updated);
-    // Also update stored account if not a demo user
-    const stored = localStorage.getItem(`sharebite_account_${user.email}`);
+    const stored = localStorage.getItem(`nibblen_account_${user.email}`);
     if (stored) {
       const account = JSON.parse(stored);
       account.user = updated;
-      localStorage.setItem(`sharebite_account_${user.email}`, JSON.stringify(account));
+      localStorage.setItem(`nibblen_account_${user.email}`, JSON.stringify(account));
     }
   };
 
   const setRole = (role: UserRole) => updateProfile({ role });
 
+  const applyForProvider = (data: {
+    providerType: ProviderType;
+    businessName?: string;
+    safetyPolicyAccepted: boolean;
+    integrityPolicyAccepted: boolean;
+    foodSafetyAccepted: boolean;
+  }) => {
+    updateProfile({ ...data, providerStatus: 'pending' });
+  };
+
+  const approveProvider = () => {
+    updateProfile({ providerStatus: 'approved', role: 'provider' });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, updateProfile, setRole }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, signup, logout, updateProfile, setRole, applyForProvider, approveProvider }}
+    >
       {children}
     </AuthContext.Provider>
   );
