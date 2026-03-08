@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, use } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
 import {
   ArrowLeft, MapPin, Clock, Store, ShoppingBag, Minus, Plus, CheckCircle, Share2, ShieldCheck, AlertTriangle, Flag, Navigation, Info
@@ -19,8 +19,8 @@ import {
 import { PickupMap } from '@/components/map/PickupMap';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
-export default function ListingDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function ListingDetailPage() {
+  const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { getListing, reserveListing } = useData();
   const { user } = useAuth();
