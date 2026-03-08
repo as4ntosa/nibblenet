@@ -114,6 +114,8 @@ export interface Listing {
   createdAt: string;
   expiresAt: string;
   distance?: number;
+  /** True when this listing comes from mock/sample data (not a real live listing). */
+  isSample?: boolean;
 }
 
 export interface Reservation {

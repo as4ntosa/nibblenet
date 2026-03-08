@@ -61,10 +61,12 @@ export default function ListingDetailPage({ params }: { params: { id: string } }
   const handleReserve = async () => {
     if (!user || !isAvailable) return;
     setReserving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    const res = reserveListing(listing, user.id, user.name, qty);
-    setReserved({ code: res.confirmationCode, total: res.totalPrice });
-    setReserving(false);
+    try {
+      const res = await reserveListing(listing, user.id, user.name, qty);
+      setReserved({ code: res.confirmationCode, total: res.totalPrice });
+    } finally {
+      setReserving(false);
+    }
   };
 
   return (

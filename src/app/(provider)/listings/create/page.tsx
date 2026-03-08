@@ -96,7 +96,6 @@ export default function CreateListingPage() {
     if (Object.keys(errs).length > 0) return;
 
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 700));
 
     const expiresAt = new Date(
       Date.now() + (new Date(`1970-01-01T${form.pickupEndTime}:00`).getTime() - new Date(`1970-01-01T${form.pickupStartTime}:00`).getTime() + 8 * 3600000)
@@ -108,34 +107,37 @@ export default function CreateListingPage() {
       ? `A surprise ${SURPRISE_BOX_LABELS[surpriseBoxSize].toLowerCase()} filled with a mystery assortment from ${user!.businessName || user!.name}. Contents vary — that's the fun!`
       : form.description;
 
-    createListing({
-      providerId: user!.id,
-      providerName: user!.name,
-      businessName: user!.businessName || user!.name,
-      businessType: user!.businessType,
-      title: finalTitle,
-      description: finalDescription,
-      category: form.category as Category,
-      tags: form.tags,
-      allergens: selectedAllergens,
-      price: finalPrice,
-      originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
-      quantity: Number(form.quantity),
-      pickupAddress: form.pickupAddress,
-      pickupCity: form.pickupCity,
-      pickupZip: form.pickupZip,
-      pickupStartTime: form.pickupStartTime,
-      pickupEndTime: form.pickupEndTime,
-      pickupInstructions: form.pickupInstructions,
-      imageUrl: form.imageUrl,
-      expiresAt,
-      distance: 0.2,
-      isSurpriseBox,
-      surpriseBoxSize: isSurpriseBox ? surpriseBoxSize : undefined,
-    });
-
-    setSaving(false);
-    setSuccessOpen(true);
+    try {
+      await createListing({
+        providerId: user!.id,
+        providerName: user!.name,
+        businessName: user!.businessName || user!.name,
+        businessType: user!.businessType,
+        title: finalTitle,
+        description: finalDescription,
+        category: form.category as Category,
+        tags: form.tags,
+        allergens: selectedAllergens,
+        price: finalPrice,
+        originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
+        quantity: Number(form.quantity),
+        pickupAddress: form.pickupAddress,
+        pickupCity: form.pickupCity,
+        pickupZip: form.pickupZip,
+        pickupStartTime: form.pickupStartTime,
+        pickupEndTime: form.pickupEndTime,
+        pickupInstructions: form.pickupInstructions,
+        imageUrl: form.imageUrl,
+        expiresAt,
+        isSurpriseBox,
+        surpriseBoxSize: isSurpriseBox ? surpriseBoxSize : undefined,
+      });
+      setSuccessOpen(true);
+    } catch (err) {
+      setErrors({ submit: err instanceof Error ? err.message : 'Failed to publish listing. Please try again.' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -430,6 +432,9 @@ export default function CreateListingPage() {
           />
         </div>
 
+        {errors.submit && (
+          <p className="text-xs text-red-500 text-center">{errors.submit}</p>
+        )}
         <Button type="submit" fullWidth size="lg" loading={saving} className="mt-2">
           Publish Listing
         </Button>
