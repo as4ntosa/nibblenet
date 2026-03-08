@@ -1,4 +1,4 @@
-# ShareBite
+# ShareBite: Just like the myth about rabbits and carrots, people have myths about food — and NibbleNet helps people see the truth.
 
 A food surplus marketplace that connects providers (restaurants, bakeries, grocers) with consumers looking to purchase surplus food at discounted prices. Built as a mobile-first Next.js app with a desktop iPhone preview frame.
 
