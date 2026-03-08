@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
 import { ChatBot } from '@/components/ChatBot';
 
 // ─── Status Bar ────────────────────────────────────────────────────────────
@@ -153,21 +154,30 @@ export function IPhoneFrame({ children }: iPhoneFrameProps) {
       >
         <Wallpaper />
 
-        {/* Label above */}
+        {/* Label above — logo + name + brand */}
         <div style={{
           position: 'absolute',
-          top: 20,
+          top: 18,
           left: '50%',
           transform: 'translateX(-50%)',
-          color: 'rgba(255,255,255,0.35)',
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
           zIndex: 10,
           userSelect: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          whiteSpace: 'nowrap',
         }}>
-          NibbleNet · iOS Preview
+          <div style={{ width: 32, height: 32, borderRadius: 10, overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
+            <Image src="/logo.png" alt="NibbleNet" fill style={{ objectFit: 'cover' }} sizes="32px" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: 13, fontWeight: 800, letterSpacing: -0.2 }}>
+              NibbleNet
+            </span>
+            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 9, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              Fantastic Fantosa Corporations · iOS Preview
+            </span>
+          </div>
         </div>
 
         {/* Scaled phone wrapper */}

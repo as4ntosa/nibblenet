@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ShieldCheck, FileText, Leaf, ArrowRight, CheckCircle, Store } from 'lucide-react';
+import { ShieldCheck, FileText, ArrowRight, CheckCircle, Store } from 'lucide-react';
+import { LogoIcon } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
 
@@ -46,9 +47,7 @@ export default function BecomeAProviderPage() {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="bg-gradient-to-b from-brand-50 to-white px-5 pt-10 pb-6 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-brand-600 flex items-center justify-center mx-auto mb-4">
-          <Leaf size={28} className="text-white" />
-        </div>
+        <LogoIcon size={56} className="mx-auto mb-4" />
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Become a NibbleNet Provider</h1>
         <p className="text-sm text-gray-500 max-w-xs mx-auto">
           Share surplus food with your community. We review every application to keep the platform safe and trustworthy.

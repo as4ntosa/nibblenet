@@ -3,9 +3,10 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Leaf, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Logo } from '@/components/ui/Logo';
 import { useAuth } from '@/context/AuthContext';
 
 function LoginContent() {
@@ -58,11 +59,8 @@ function LoginContent() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-brand-50 to-white flex flex-col">
       <div className="px-5 pt-10 pb-6 text-center">
-        <Link href="/" className="inline-flex items-center gap-2 mb-6">
-          <span className="flex items-center justify-center w-10 h-10 rounded-2xl bg-brand-600">
-            <Leaf size={20} className="text-white" />
-          </span>
-          <span className="font-bold text-gray-900 text-xl">NibbleNet</span>
+        <Link href="/" className="inline-flex mb-5">
+          <Logo size={44} showName showBrand />
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">
           {tab === 'login' ? 'Welcome back' : 'Create your account'}
