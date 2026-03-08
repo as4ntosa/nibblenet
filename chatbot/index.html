@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NibbleNet — Rescue Food, Save Money</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Page content -->
+  <main class="page-content">
+    <div class="hero">
+      <h1>NibbleNet</h1>
+      <p class="tagline">Rescue food. Save money. Feed communities.</p>
+      <p class="description">
+        NibbleNet connects surplus food from restaurants, bakeries, grocery stores, and households
+        with people who want affordable, delicious food. Less waste, more plates filled.
+      </p>
+    </div>
+
+    <div class="features">
+      <div class="feature-card">
+        <span class="feature-icon">&#127858;</span>
+        <h3>Surprise Boxes</h3>
+        <p>Grab a mystery box of food at a fraction of the price. Every box is a delicious surprise.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#128205;</span>
+        <h3>Near You</h3>
+        <p>Find surplus food from providers in your neighborhood using your location or zip code.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">&#128154;</span>
+        <h3>Reduce Waste</h3>
+        <p>Every meal rescued is food saved from the landfill. Track your impact as you eat.</p>
+      </div>
+    </div>
+
+    <div class="cta-section">
+      <h2>How It Works</h2>
+      <ol class="steps">
+        <li><strong>Browse</strong> &mdash; Find surplus food, surprise boxes, and deals near you.</li>
+        <li><strong>Reserve</strong> &mdash; Claim your items and get a pickup confirmation code.</li>
+        <li><strong>Pick Up</strong> &mdash; Head to the provider, inspect your food, and enjoy!</li>
+      </ol>
+    </div>
+
+    <footer class="site-footer">
+      <p>Questions? Chat with our AI assistant in the corner, or email <strong>support@mysite.com</strong></p>
+    </footer>
+  </main>
+
+  <!-- Chatbot widget -->
+  <div id="chatbot">
+    <!-- Floating bubble -->
+    <button id="chat-bubble" aria-label="Open chat">
+      <svg id="bubble-icon-chat" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <svg id="bubble-icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+      <span id="bubble-badge" style="display:none;"></span>
+    </button>
+
+    <!-- Chat window -->
+    <div id="chat-window" class="hidden">
+      <div id="chat-header">
+        <span>AI Assistant</span>
+        <button id="chat-close" aria-label="Close chat">&times;</button>
+      </div>
+      <div id="chat-messages"></div>
+      <form id="chat-form">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="Type a message…"
+          autocomplete="off"
+        />
+        <button type="submit" id="chat-send" aria-label="Send message">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script src="chatbot.js"></script>
+</body>
+</html>
