@@ -11,8 +11,8 @@ NibbleNet is a mobile-first, web-based social impact marketplace that reduces fo
 
 | Name | Role |
 |---|---|
-| Alexis Santosa | Full-stack development, product design, architecture |
-| Siyu Fan | Full-stack development, analytics & AI insights |
+| Alexis Santosa | Full-stack development, product design, architecture, Supabase integration, location/mapping, listing detail experience |
+| Siyu Fan | Full-stack development, provider analytics engine, AI insights dashboard, AI chatbot assistant, UI/UX improvements |
 
 ---
 
@@ -46,6 +46,14 @@ Every NibbleNet transaction simultaneously reduces food waste, makes food more a
 | Provider analytics + AI insights | ✓ | Rarely |
 | AI chatbot assistant | ✓ | Rarely |
 | Google Maps pickup integration | ✓ | Rarely |
+
+---
+
+## Screenshots
+
+| Consumer Home | Listing Detail | Provider Reports |
+|---|---|---|
+| ![Consumer Home](public/screenshots/03-consumer-home.png) | ![Listing Detail](public/screenshots/05-listing-detail.png) | ![Provider Dashboard](public/screenshots/08-provider-dashboard.png) |
 
 ---
 
@@ -150,17 +158,37 @@ Users save allergy and sensitivity preferences in their profile:
 
 ---
 
-## Provider Analytics & AI Insights
+## Provider Analytics & AI Insights *(built by Siyu Fan)*
 
-Approved providers have access to a **Reports dashboard** (built by Siyu Fan):
+Approved providers have access to a **Reports dashboard** at `/reports` in Provider Mode:
 
-- Revenue metrics (daily, weekly totals)
-- Top-selling items and peak pickup hours
-- Daily trend charts
-- **AI-generated recommendations** via Featherless AI (Llama 3.1)
-  - Identifies best-performing listing types
-  - Suggests optimal pickup time windows
-  - Highlights waste-reduction opportunities
+- **Revenue metrics** — total revenue, order count, items sold, average order value
+- **Daily revenue chart** — 7-day bar chart with revenue and order counts
+- **Top-selling items** — ranked by revenue with progress bars
+- **Peak pickup hours** — hourly order distribution to identify busy windows
+- **AI-generated insights** via Featherless AI (Llama 3.1-8B-Instruct):
+  - Business performance overview
+  - 4 data-driven insight bullets
+  - 2 actionable recommendations
+- Graceful fallback insights when the AI API is unavailable
+
+### How to access:
+1. Log in with the demo account (`demo@nibblen.com` / `demo123`)
+2. Tap **Provider** in the mode switcher strip at the bottom
+3. Tap **Reports** in the provider nav bar
+
+---
+
+## AI Chatbot Assistant *(built by Siyu Fan)*
+
+A floating chat bubble appears inside the app frame on every screen:
+
+- Powered by **Featherless AI** (Llama 3.1-8B-Instruct)
+- Auto-greeting after 5 seconds on first load
+- Answers questions about NibbleNet, food listings, and reservations
+- Built-in contact shortcut (`support@nibblenet.com`)
+- **Draggable** — drag the bubble to any of 4 corners; snaps with smooth animation
+- Tap to open/close; drag threshold distinguishes taps from drags
 
 ---
 
@@ -183,7 +211,7 @@ The demo account has `providerStatus: 'approved'` pre-configured. You can browse
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript |
 | Styling | Tailwind CSS |
 | Icons | Lucide React |
@@ -192,10 +220,9 @@ The demo account has `providerStatus: 'approved'` pre-configured. You can browse
 | Persistence | Supabase (live) / localStorage (mock fallback) |
 | Maps | Google Maps JavaScript API (`@react-google-maps/api`) |
 | Geolocation | Browser API + Haversine distance formula |
-| AI Chatbot | Featherless AI — Llama 3.1-8B-Instruct |
-| AI Insights | Featherless AI — provider analytics recommendations |
+| AI Chatbot | Featherless AI — Llama 3.1-8B-Instruct *(Siyu Fan)* |
+| AI Insights | Featherless AI — provider analytics recommendations *(Siyu Fan)* |
 | Images | Unsplash CDN |
-| Testing | Playwright |
 
 ---
 
@@ -250,7 +277,7 @@ src/
 ├── app/
 │   ├── (consumer)/        # Home feed, search, listing detail, reservations, profile
 │   ├── (provider)/        # Dashboard, listings CRUD, create listing, reports
-│   ├── api/report/        # AI insights API route (Featherless)
+│   ├── api/report/        # AI insights API route (Featherless) — Siyu Fan
 │   ├── become-a-provider/ # Provider landing page
 │   ├── provider-apply/    # 4-step provider onboarding form
 │   ├── provider-pending/  # Pending approval status + demo approval
@@ -259,10 +286,10 @@ src/
 ├── components/
 │   ├── ui/                # Button, Input, Badge, Modal primitives
 │   ├── layout/            # IPhoneFrame, BottomNav, ProviderNav, ModeSwitcher
-│   ├── listing/           # ListingCard, AllergenChips
+│   ├── listing/           # ListingCard, ListingCardSkeleton, AllergenChips
 │   ├── map/               # ListingsMap, PickupMap (Google Maps)
 │   ├── reservation/       # ReservationCard
-│   └── ChatBot.tsx        # AI assistant (Featherless API)
+│   └── ChatBot.tsx        # AI assistant (Featherless API) — Siyu Fan
 ├── context/
 │   ├── AuthContext.tsx    # Supabase auth + localStorage fallback
 │   └── DataContext.tsx    # Live listings (Supabase) + mock fallback, reservations
@@ -271,8 +298,8 @@ src/
 ├── lib/
 │   ├── supabase.ts        # Supabase client + DB↔type converters
 │   ├── mock-data.ts       # Demo users, listings, reservations
-│   ├── mock-orders.ts     # Mock order history for analytics
-│   ├── analytics.ts       # Revenue, trends, peak hours engine
+│   ├── mock-orders.ts     # Mock order history for analytics — Siyu Fan
+│   ├── analytics.ts       # Revenue, trends, peak hours engine — Siyu Fan
 │   └── utils.ts           # Distances, formatters, constants
 ├── types/
 │   └── index.ts           # Shared TypeScript types
@@ -284,19 +311,22 @@ src/
 ## Roadmap
 
 ### ✅ Shipped (MVP)
-- Real Supabase database — live sign-up, login, and listing storage
-- Unified account with consumer/provider mode switching
-- 4-step provider safety approval flow
-- Consumer feed with allergen-aware auto-filtering
-- Location-based listing discovery (Haversine + geolocation)
-- Food condition + freshness data on every listing
-- Live distance on listing detail with Google Maps pickup map
-- Surprise Boxes and Rescue Bundles
-- Reservation system with confirm-or-cancel pickup
-- Impact counter (meals rescued, CO₂ saved)
-- AI chatbot assistant (NibbleNet Assistant)
-- Provider analytics dashboard with AI insights
-- iOS-style preview frame on desktop
+- Real Supabase database — live sign-up, login, and listing storage *(Alexis)*
+- Unified account with consumer/provider mode switching *(Alexis)*
+- 4-step provider safety approval flow *(Alexis)*
+- Consumer feed with allergen-aware auto-filtering *(Alexis)*
+- Location-based listing discovery (Haversine + geolocation) *(Alexis)*
+- Food condition + freshness data on every listing *(Alexis)*
+- Live distance + freshness age on listing cards *(Alexis)*
+- Listing detail with food info first, Google Maps, Get Directions *(Alexis)*
+- Reservation system with confirm-or-cancel pickup *(Alexis)*
+- Skeleton loading state while Supabase fetches *(Alexis)*
+- Impact counter (meals rescued, CO₂ saved) *(Alexis)*
+- Provider analytics dashboard with revenue, trends, peak hours *(Siyu Fan)*
+- AI-generated insights and recommendations via Featherless AI *(Siyu Fan)*
+- AI chatbot assistant (NibbleNet Assistant) — draggable, snaps to corners *(Siyu Fan)*
+- Bottom nav clipping fix + phone frame containment *(Siyu Fan)*
+- iOS-style preview frame on desktop *(Alexis)*
 
 ### 🔜 Next (Post-MVP)
 - Real identity verification (Stripe Identity or Persona)
