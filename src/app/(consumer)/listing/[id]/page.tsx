@@ -22,7 +22,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { getListing, reserveListing } = useData();
+  const { getListing, reserveListing, listingsFetchStatus } = useData();
   const { user } = useAuth();
 
   const listing = getListing(id);
@@ -36,7 +36,16 @@ export default function ListingDetailPage() {
   const [reserved, setReserved] = useState<{ code: string; total: number } | null>(null);
   const [reported, setReported] = useState(false);
 
+  // While Supabase is still fetching, don't show "not found" — the listing
+  // may simply not be in the initial mock data yet.
   if (!listing) {
+    if (listingsFetchStatus === 'loading') {
+      return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      );
+    }
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-5 text-center">
         <div className="text-5xl mb-4">🍃</div>
