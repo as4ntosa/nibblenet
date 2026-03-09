@@ -1,6 +1,5 @@
 /**
- * Supabase client — returns null if env vars are not configured.
- * When null, the app falls back to localStorage-based mock mode.
+ * Supabase has been removed — the app runs entirely in mock/localStorage mode.
  */
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
