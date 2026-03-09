@@ -5,6 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { ProviderNav } from '@/components/layout/ProviderNav';
 
+function FullScreenSpinner() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
 export default function ProviderLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -24,7 +32,9 @@ export default function ProviderLayout({ children }: { children: React.ReactNode
     }
   }, [user, loading, router]);
 
-  if (loading || !user) return null;
+  // Show spinner while auth resolves — same HTML on server and client, no hydration mismatch
+  if (loading) return <FullScreenSpinner />;
+  if (!user) return <FullScreenSpinner />; // redirect in flight
 
   return (
     <div className="min-h-full bg-gray-50">

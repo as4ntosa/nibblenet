@@ -55,13 +55,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // ── localStorage helpers (mock mode + demo user) ─────────────────────
+  const isBrowser = typeof window !== 'undefined';
+
   const persistLocal = (u: User | null) => {
     setUser(u);
+    if (!isBrowser) return;
     if (u) localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
     else localStorage.removeItem(STORAGE_KEY);
   };
 
   const updateLocalAccount = (email: string, updated: User) => {
+    if (!isBrowser) return;
     const stored = localStorage.getItem(`nibblen_account_${email}`);
     if (stored) {
       const account = JSON.parse(stored);
@@ -143,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Mock / localStorage mode
-    const stored = localStorage.getItem(`nibblen_account_${email}`);
+    const stored = isBrowser ? localStorage.getItem(`nibblen_account_${email}`) : null;
     if (stored) {
       const account = JSON.parse(stored);
       if (account.password === password) {
@@ -158,7 +162,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = async (email: string, password: string, name: string) => {
     await new Promise((r) => setTimeout(r, 400));
 
-    if (isDemoEmail(email) || localStorage.getItem(`nibblen_account_${email}`)) {
+    const existingAccount = isBrowser ? localStorage.getItem(`nibblen_account_${email}`) : null;
+    if (isDemoEmail(email) || existingAccount) {
       throw new Error('An account with this email already exists');
     }
 

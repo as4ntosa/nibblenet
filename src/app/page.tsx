@@ -27,7 +27,13 @@ export default function SplashPage() {
     }
   }, [user, loading, router]);
 
-  if (loading) return null;
+  // Don't block render — show the public splash page immediately.
+  // Authenticated users get redirected client-side via the useEffect above.
+  if (loading) return (
+    <div className="flex flex-col min-h-full bg-white items-center justify-center">
+      <div className="w-8 h-8 border-2 border-brand-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   return (
     <div className="flex flex-col min-h-full bg-white">
