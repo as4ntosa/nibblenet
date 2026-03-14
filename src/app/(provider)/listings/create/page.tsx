@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, ImagePlus, CheckCircle, Gift } from 'lucide-react';
+import { ArrowLeft, ImagePlus, CheckCircle, Gift, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useData } from '@/context/DataContext';
 import { Category, CuisineTag, SurpriseBoxSize, Allergen } from '@/types';
 import { CATEGORIES, CUISINE_TAGS, CATEGORY_EMOJI, cn, SURPRISE_BOX_SIZES, SURPRISE_BOX_LABELS, SURPRISE_BOX_PRICES, SURPRISE_BOX_DESCRIPTIONS, ALLERGENS, ALLERGEN_LABEL } from '@/lib/utils';
+import { askAI } from '@/lib/ai';
 
 // Sample images providers can choose from
 const SAMPLE_IMAGES = [
@@ -64,6 +65,49 @@ export default function CreateListingPage() {
   const [waiverOpen, setWaiverOpen] = useState(!user?.waiverSigned);
   const [waiverChecked, setWaiverChecked] = useState(false);
   const [waiverSigning, setWaiverSigning] = useState(false);
+
+  // AI features
+  const [priceSuggestion, setPriceSuggestion] = useState<string | null>(null);
+  const [loadingPrice, setLoadingPrice] = useState(false);
+  const [qualityScore, setQualityScore] = useState<{ score: number; tip: string } | null>(null);
+  const [loadingQuality, setLoadingQuality] = useState(false);
+
+  const suggestPrice = async () => {
+    if (!form.originalPrice || !form.category) return;
+    setLoadingPrice(true);
+    setPriceSuggestion(null);
+    try {
+      const reply = await askAI(
+        'You are a food marketplace pricing expert. Reply with ONLY a JSON object: {"price": <number>, "reason": "<one sentence>"}. No markdown.',
+        `originalPrice=$${form.originalPrice}, category=${form.category}, foodCondition=cooked, city=${user?.city || 'unknown'}. Suggest an optimal surplus sale price to maximize pickup chance.`,
+        120,
+      );
+      const parsed = JSON.parse(reply.replace(/```json|```/g, '').trim());
+      setPriceSuggestion(`Suggested: $${Number(parsed.price).toFixed(2)} — ${parsed.reason}`);
+    } catch {
+      setPriceSuggestion('Could not generate suggestion. Try adding a category and original price first.');
+    } finally {
+      setLoadingPrice(false);
+    }
+  };
+
+  const checkQuality = async () => {
+    if (!form.title.trim() || !form.description.trim()) return;
+    setLoadingQuality(true);
+    try {
+      const reply = await askAI(
+        'You are a food listing quality reviewer. Reply with ONLY a JSON object: {"score": <1-10>, "tip": "<one actionable improvement sentence>"}. No markdown.',
+        `title="${form.title}", description="${form.description}"`,
+        100,
+      );
+      const parsed = JSON.parse(reply.replace(/```json|```/g, '').trim());
+      setQualityScore({ score: Number(parsed.score), tip: parsed.tip });
+    } catch {
+      setQualityScore({ score: 0, tip: 'Could not analyze listing quality right now.' });
+    } finally {
+      setLoadingQuality(false);
+    }
+  };
 
   const set = (key: string, value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -260,14 +304,41 @@ export default function CreateListingPage() {
               error={errors.title}
             />
 
-            <Textarea
-              label="Description"
-              placeholder="Describe what you're offering, freshness, any notes…"
-              rows={3}
-              value={form.description}
-              onChange={(e) => set('description', e.target.value)}
-              error={errors.description}
-            />
+            <div>
+              <Textarea
+                label="Description"
+                placeholder="Describe what you're offering, freshness, any notes…"
+                rows={3}
+                value={form.description}
+                onChange={(e) => { set('description', e.target.value); setQualityScore(null); }}
+                error={errors.description}
+              />
+              {/* AI Quality Score */}
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={checkQuality}
+                  disabled={loadingQuality || !form.title || !form.description}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-brand-600 bg-brand-50 border border-brand-200 px-3 py-1.5 rounded-lg hover:bg-brand-100 transition-colors disabled:opacity-40"
+                >
+                  {loadingQuality ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                  Check Quality
+                </button>
+                {qualityScore && (
+                  <div className={cn(
+                    'flex-1 flex items-start gap-2 rounded-lg px-3 py-2 text-xs',
+                    qualityScore.score >= 7 ? 'bg-green-50 text-green-700' :
+                    qualityScore.score >= 4 ? 'bg-amber-50 text-amber-700' :
+                    'bg-red-50 text-red-700'
+                  )}>
+                    <span className="font-bold shrink-0">
+                      {qualityScore.score}/10
+                    </span>
+                    <span className="leading-relaxed">{qualityScore.tip}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </>
         )}
 
@@ -349,27 +420,49 @@ export default function CreateListingPage() {
 
         {/* Pricing */}
         {!isSurpriseBox && (
-          <div className="grid grid-cols-2 gap-3">
-            <Input
-              label="Your Price ($)"
-              type="number"
-              placeholder="5.00"
-              min="0.50"
-              step="0.50"
-              value={form.price}
-              onChange={(e) => set('price', e.target.value)}
-              error={errors.price}
-            />
-            <Input
-              label="Original Price ($)"
-              type="number"
-              placeholder="15.00"
-              min="0"
-              step="0.50"
-              value={form.originalPrice}
-              onChange={(e) => set('originalPrice', e.target.value)}
-              hint="Optional"
-            />
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Your Price ($)"
+                type="number"
+                placeholder="5.00"
+                min="0.50"
+                step="0.50"
+                value={form.price}
+                onChange={(e) => { set('price', e.target.value); setPriceSuggestion(null); }}
+                error={errors.price}
+              />
+              <Input
+                label="Original Price ($)"
+                type="number"
+                placeholder="15.00"
+                min="0"
+                step="0.50"
+                value={form.originalPrice}
+                onChange={(e) => { set('originalPrice', e.target.value); setPriceSuggestion(null); }}
+                hint="Optional"
+              />
+            </div>
+            {/* AI Price Suggestion */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={suggestPrice}
+                disabled={loadingPrice || !form.originalPrice || !form.category}
+                className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 bg-purple-50 border border-purple-200 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-40"
+              >
+                {loadingPrice ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                AI Suggest Price
+              </button>
+              {priceSuggestion && (
+                <p className="text-xs text-purple-700 bg-purple-50 border border-purple-100 rounded-lg px-3 py-1.5 flex-1">
+                  {priceSuggestion}
+                </p>
+              )}
+              {!form.originalPrice && !form.category && (
+                <p className="text-[11px] text-gray-400">Add original price &amp; category to unlock AI suggestion</p>
+              )}
+            </div>
           </div>
         )}
 

@@ -131,6 +131,15 @@ export interface Reservation {
   createdAt: string;
 }
 
+export interface PantryItem {
+  id: string;
+  name: string;
+  source: 'rescue' | 'manual';
+  listingId?: string;
+  addedAt: string;
+  used: boolean;
+}
+
 export interface ListingFilters {
   query?: string;
   category?: Category | '';

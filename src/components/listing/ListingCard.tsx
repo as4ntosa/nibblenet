@@ -6,9 +6,10 @@ import { MapPin, Clock, Navigation } from 'lucide-react';
 import { Listing } from '@/types';
 import {
   formatPrice, discountPercent, formatPickupWindow, CATEGORY_EMOJI,
-  STATUS_LABEL, timeUntil, ALLERGEN_LABEL, FOOD_CONDITION_LABEL, FOOD_CONDITION_ICON,
+  STATUS_LABEL, timeUntil, timeUntilMs, ALLERGEN_LABEL, FOOD_CONDITION_LABEL, FOOD_CONDITION_ICON,
   formatDistance, formatFoodAge, cn,
 } from '@/lib/utils';
+import { computeFreshnessScore, getFreshnessLevel, FRESHNESS_CONFIG } from '@/lib/freshness';
 
 interface ListingCardProps {
   listing: Listing;
@@ -42,6 +43,11 @@ export function ListingCard({ listing }: ListingCardProps) {
   const isLow = remaining <= 2 && status === 'available';
   const providerColor = businessType ? (PROVIDER_TYPE_COLOR[businessType] ?? 'bg-gray-50 text-gray-500') : 'bg-gray-50 text-gray-500';
   const firstTag = tags && tags.length > 0 ? tags[0] : null;
+
+  const freshnessScore = computeFreshnessScore(listing);
+  const freshnessLevel = getFreshnessLevel(freshnessScore);
+  const freshnessConfig = FRESHNESS_CONFIG[freshnessLevel];
+  const isExpiringSoon = status === 'available' && timeUntilMs(expiresAt) < 2 * 3_600_000 && timeUntilMs(expiresAt) > 0;
 
   return (
     <Link href={`/listing/${id}`} className="block group">
@@ -90,11 +96,22 @@ export function ListingCard({ listing }: ListingCardProps) {
             </div>
           )}
 
-          {/* Distance pill — top right */}
-          {distance !== undefined && status === 'available' && (
-            <div className="absolute top-2 right-2">
-              {distancePill(distance)}
+          {/* Freshness pill — top right (replaces distance for urgency) */}
+          {status === 'available' && (
+            <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+              {distance !== undefined && distancePill(distance)}
+              <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded-full', freshnessConfig.pill)}>
+                {freshnessConfig.label}
+              </span>
             </div>
+          )}
+          {distance !== undefined && status !== 'available' && (
+            <div className="absolute top-2 right-2">{distancePill(distance)}</div>
+          )}
+
+          {/* Expiring soon pulse ring */}
+          {isExpiringSoon && (
+            <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-red-500 animate-ping" />
           )}
         </div>
 

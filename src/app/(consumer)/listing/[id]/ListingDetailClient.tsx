@@ -16,6 +16,7 @@ import {
   STATUS_LABEL, timeUntil, cn, ALLERGEN_LABEL,
   haversineKm, formatDistance, formatFoodAge, FOOD_CONDITION_LABEL, FOOD_CONDITION_COLOR, FOOD_CONDITION_ICON,
 } from '@/lib/utils';
+import { computeFreshnessScore, getFreshnessLevel, FRESHNESS_CONFIG } from '@/lib/freshness';
 import { PickupMap } from '@/components/map/PickupMap';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
@@ -67,6 +68,10 @@ export default function ListingDetailClient() {
   const discount = originalPrice ? discountPercent(price, originalPrice) : null;
   const maxQty = Math.min(remaining, 5);
   const isAvailable = status === 'available' && remaining > 0;
+
+  const freshnessScore = computeFreshnessScore(listing);
+  const freshnessLevel = getFreshnessLevel(freshnessScore);
+  const freshnessConfig = FRESHNESS_CONFIG[freshnessLevel];
 
   const handleReserve = async () => {
     if (!user || !isAvailable) return;
@@ -305,6 +310,26 @@ export default function ListingDetailClient() {
               interactive
               height={220}
             />
+          )}
+        </div>
+
+        {/* Freshness score + demand signal */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className={cn('rounded-xl px-3 py-2.5 flex items-center gap-2', freshnessConfig.pill)}>
+            <span className="text-base">🌿</span>
+            <div>
+              <p className="text-[10px] font-semibold opacity-70 uppercase tracking-wide">Freshness</p>
+              <p className="text-xs font-bold">{freshnessConfig.label.split(' ').slice(1).join(' ')}</p>
+            </div>
+          </div>
+          {quantityReserved > 0 && (
+            <div className="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2.5 flex items-center gap-2">
+              <span className="text-base">🔥</span>
+              <div>
+                <p className="text-[10px] font-semibold text-blue-500 uppercase tracking-wide">Popular</p>
+                <p className="text-xs font-bold text-blue-700">{quantityReserved} reserved</p>
+              </div>
+            </div>
           )}
         </div>
 

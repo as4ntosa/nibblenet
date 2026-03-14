@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, FormEvent, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { MessageCircle, X, Send } from 'lucide-react';
 
 // Featherless AI config
@@ -8,10 +9,29 @@ const FEATHERLESS_API_KEY = 'rc_82ef6597804cb6b2ab383a3b60d9d088c29c0a45e06d567d
 const FEATHERLESS_API_URL = 'https://api.featherless.ai/v1/chat/completions';
 const FEATHERLESS_MODEL = 'meta-llama/Meta-Llama-3.1-8B-Instruct';
 
-const SYSTEM_PROMPT =
-  'You are a friendly and helpful AI assistant for NibbleNet, a food surplus marketplace app that connects providers (restaurants, bakeries, grocery stores) with consumers looking for affordable food. ' +
-  'Keep answers concise and helpful. ' +
-  'If the user asks how to contact us, reply with: "You can reach us at: support@nibblenet.com"';
+function buildSystemPrompt(pathname: string): string {
+  const base =
+    'You are a friendly and helpful AI assistant for NibbleNet, a food surplus marketplace app that connects providers (restaurants, bakeries, grocery stores) with consumers looking for affordable food. ' +
+    'Keep answers concise and helpful. ' +
+    'If the user asks how to contact us, reply with: "You can reach us at: support@nibblenet.com" ';
+
+  const pageContext: Record<string, string> = {
+    '/home':         'The user is currently browsing the home feed of nearby food listings.',
+    '/search':       'The user is on the search page, filtering food listings by category, price, or cuisine.',
+    '/reservations': 'The user is viewing their active and past food reservations.',
+    '/pantry':       'The user is on the Pantry page where they can track rescued ingredients and generate AI recipes.',
+    '/profile':      'The user is viewing their profile and allergen preferences.',
+    '/impact':       'The user is viewing their personal food rescue impact stats.',
+    '/listings/create': 'The user is creating a new food listing as a provider.',
+    '/dashboard':    'The user is on the provider dashboard viewing their listings and analytics.',
+    '/reports':      'The user is viewing AI-generated sales reports as a provider.',
+  };
+
+  const matched = Object.entries(pageContext).find(([key]) => pathname.includes(key));
+  const ctx = matched ? matched[1] : 'The user is navigating NibbleNet.';
+
+  return base + ctx + ' Answer questions relevant to their current context when possible.';
+}
 
 interface Message {
   role: 'user' | 'assistant';
@@ -24,6 +44,7 @@ const BUBBLE_SIZE = 48;
 const EDGE_GAP = 12;
 
 export function ChatBot() {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -38,8 +59,16 @@ export function ChatBot() {
   const containerRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef<{ startX: number; startY: number; moved: boolean } | null>(null);
   const historyRef = useRef<{ role: string; content: string }[]>([
-    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'system', content: buildSystemPrompt(pathname ?? '') },
   ]);
+
+  // Update system prompt when route changes
+  useEffect(() => {
+    const newPrompt = buildSystemPrompt(pathname ?? '');
+    if (historyRef.current[0]?.role === 'system') {
+      historyRef.current[0].content = newPrompt;
+    }
+  }, [pathname]);
 
   // Auto-greet after 5 seconds
   useEffect(() => {

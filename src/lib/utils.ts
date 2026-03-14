@@ -24,6 +24,10 @@ export function formatPickupWindow(start: string, end: string): string {
   return `${fmt(start)} – ${fmt(end)}`;
 }
 
+export function timeUntilMs(isoString: string): number {
+  return new Date(isoString).getTime() - Date.now();
+}
+
 export function timeUntil(isoString: string): string {
   const ms = new Date(isoString).getTime() - Date.now();
   if (ms <= 0) return 'Expired';

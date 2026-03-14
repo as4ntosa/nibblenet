@@ -1,9 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { CheckCircle, Clock, XCircle, Package, ShieldCheck } from 'lucide-react';
+import { CheckCircle, Clock, XCircle, Package, ShieldCheck, Timer } from 'lucide-react';
 import { Reservation } from '@/types';
-import { formatPrice, formatPickupWindow } from '@/lib/utils';
+import { formatPrice, formatPickupWindow, timeUntilMs } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 interface ReservationCardProps {
@@ -48,6 +48,19 @@ export function ReservationCard({ reservation, onCancel, onConfirmPickup, onCanc
     month: 'short', day: 'numeric',
   });
 
+  // Pickup window countdown for confirmed reservations
+  const pickupEndMs = status === 'confirmed'
+    ? timeUntilMs(`${new Date().toISOString().split('T')[0]}T${listing.pickupEndTime}:00`)
+    : null;
+  const pickupWindowActive = pickupEndMs !== null && pickupEndMs > 0 && pickupEndMs < 7_200_000;
+  const pickupCountdownLabel = pickupEndMs !== null && pickupEndMs > 0
+    ? (() => {
+        const h = Math.floor(pickupEndMs / 3_600_000);
+        const m = Math.floor((pickupEndMs % 3_600_000) / 60_000);
+        return h > 0 ? `${h}h ${m}m` : `${m}m`;
+      })()
+    : null;
+
   return (
     <div className={cn('rounded-2xl border p-4', STATUS_BG[status])}>
       <div className="flex gap-3">
@@ -80,6 +93,24 @@ export function ReservationCard({ reservation, onCancel, onConfirmPickup, onCanc
           </div>
         </div>
       </div>
+
+      {/* Pickup window countdown */}
+      {pickupWindowActive && pickupCountdownLabel && (
+        <div className="mt-2 flex items-center gap-1.5 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+          <Timer size={12} className="text-red-500 animate-pulse shrink-0" />
+          <p className="text-xs text-red-700 font-semibold">
+            Pickup window closes in <span className="font-bold">{pickupCountdownLabel}</span> — head over now!
+          </p>
+        </div>
+      )}
+      {status === 'confirmed' && pickupCountdownLabel && !pickupWindowActive && (
+        <div className="mt-2 flex items-center gap-1.5 bg-gray-50 rounded-xl px-3 py-2">
+          <Timer size={12} className="text-gray-400 shrink-0" />
+          <p className="text-xs text-gray-500">
+            Pickup window ends at <span className="font-medium">{listing.pickupEndTime}</span>
+          </p>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="mt-3 pt-3 border-t border-white/60 flex items-center justify-between">

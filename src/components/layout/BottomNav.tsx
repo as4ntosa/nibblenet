@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, ShoppingBag, User } from 'lucide-react';
+import { Home, Search, ShoppingBag, User, ChefHat } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { ModeSwitcher } from './ModeSwitcher';
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/home', label: 'Home', icon: Home },
   { href: '/search', label: 'Search', icon: Search },
   { href: '/reservations', label: 'Orders', icon: ShoppingBag },
+  { href: '/pantry', label: 'Pantry', icon: ChefHat },
   { href: '/profile', label: 'Profile', icon: User },
 ];
 
