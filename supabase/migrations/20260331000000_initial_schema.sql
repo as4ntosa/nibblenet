@@ -1,11 +1,8 @@
--- ============================================================
--- NibbleNet — Supabase Database Schema (reference)
--- Primary source of truth: supabase/migrations/
--- Run `npx supabase start` to apply migrations automatically.
--- ============================================================
+-- ================================================================
+-- NibbleNet — Initial Schema
+-- ================================================================
 
--- ── 1. Profiles table (extends Supabase auth.users) ─────────────────────────
-
+-- ── 1. Profiles (extends auth.users) ──────────────────────────────
 CREATE TABLE IF NOT EXISTS public.profiles (
   id                        UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   name                      TEXT NOT NULL DEFAULT '',
@@ -34,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   created_at                TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Auto-create a profile row whenever a new user signs up
+-- Auto-create profile on new auth user
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -53,8 +50,7 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
--- ── 2. Listings table ────────────────────────────────────────────────────────
-
+-- ── 2. Listings ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.listings (
   id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   provider_id          UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
@@ -67,8 +63,8 @@ CREATE TABLE IF NOT EXISTS public.listings (
                          CHECK (category IN ('Fruits','Vegetables','Baked Goods','Meals','Drinks','Snacks','Dairy','Pantry Goods')),
   tags                 TEXT[] DEFAULT '{}',
   allergens            TEXT[] DEFAULT '{}',
-  price                NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
-  original_price       NUMERIC(10, 2),
+  price                NUMERIC(10,2) NOT NULL CHECK (price >= 0),
+  original_price       NUMERIC(10,2),
   quantity             INTEGER NOT NULL CHECK (quantity > 0),
   quantity_reserved    INTEGER NOT NULL DEFAULT 0 CHECK (quantity_reserved >= 0),
   status               TEXT NOT NULL DEFAULT 'available'
@@ -76,8 +72,8 @@ CREATE TABLE IF NOT EXISTS public.listings (
   pickup_address       TEXT NOT NULL,
   pickup_city          TEXT NOT NULL,
   pickup_zip           TEXT NOT NULL,
-  pickup_lat           NUMERIC(9, 6),
-  pickup_lng           NUMERIC(9, 6),
+  pickup_lat           NUMERIC(9,6),
+  pickup_lng           NUMERIC(9,6),
   pickup_start_time    TEXT NOT NULL,
   pickup_end_time      TEXT NOT NULL,
   pickup_instructions  TEXT,
@@ -99,8 +95,7 @@ CREATE TABLE IF NOT EXISTS public.listings (
   expires_at           TIMESTAMPTZ NOT NULL
 );
 
--- ── 3. Reservations table ────────────────────────────────────────────────────
-
+-- ── 3. Reservations ───────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.reservations (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   listing_id        UUID REFERENCES public.listings ON DELETE RESTRICT NOT NULL,
@@ -108,20 +103,19 @@ CREATE TABLE IF NOT EXISTS public.reservations (
   consumer_id       UUID REFERENCES auth.users ON DELETE CASCADE NOT NULL,
   consumer_name     TEXT NOT NULL,
   quantity          INTEGER NOT NULL CHECK (quantity > 0),
-  total_price       NUMERIC(10, 2) NOT NULL CHECK (total_price >= 0),
+  total_price       NUMERIC(10,2) NOT NULL CHECK (total_price >= 0),
   status            TEXT NOT NULL DEFAULT 'confirmed'
                       CHECK (status IN ('confirmed','picked_up','cancelled','cancelled_at_pickup')),
   confirmation_code TEXT NOT NULL,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- ── 4. Row Level Security ────────────────────────────────────────────────────
-
+-- ── 4. Row Level Security ──────────────────────────────────────────
 ALTER TABLE public.profiles     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.listings     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reservations ENABLE ROW LEVEL SECURITY;
 
--- Profiles: public read, self-write
+-- profiles: public read, self write
 DROP POLICY IF EXISTS "profiles_read_all"  ON public.profiles;
 CREATE POLICY "profiles_read_all"
   ON public.profiles FOR SELECT USING (TRUE);
@@ -130,7 +124,7 @@ DROP POLICY IF EXISTS "profiles_write_own" ON public.profiles;
 CREATE POLICY "profiles_write_own"
   ON public.profiles FOR ALL USING (auth.uid() = id);
 
--- Listings: public read for available listings, provider manages own
+-- listings: public can read available listings; providers manage own
 DROP POLICY IF EXISTS "listings_read"   ON public.listings;
 CREATE POLICY "listings_read"
   ON public.listings FOR SELECT
@@ -151,13 +145,12 @@ CREATE POLICY "listings_delete"
   ON public.listings FOR DELETE
   USING (provider_id = auth.uid());
 
--- Reservations: consumers manage their own
+-- reservations: consumers manage own; providers read for their listings
 DROP POLICY IF EXISTS "reservations_consumer" ON public.reservations;
 CREATE POLICY "reservations_consumer"
   ON public.reservations FOR ALL
   USING (consumer_id = auth.uid());
 
--- Providers can read reservations on their listings
 DROP POLICY IF EXISTS "reservations_provider_read" ON public.reservations;
 CREATE POLICY "reservations_provider_read"
   ON public.reservations FOR SELECT
@@ -167,8 +160,7 @@ CREATE POLICY "reservations_provider_read"
     )
   );
 
--- ── 5. Helper indexes ─────────────────────────────────────────────────────────
-
+-- ── 5. Indexes ─────────────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS listings_status_idx        ON public.listings (status);
 CREATE INDEX IF NOT EXISTS listings_provider_id_idx   ON public.listings (provider_id);
 CREATE INDEX IF NOT EXISTS listings_city_idx          ON public.listings (pickup_city);
