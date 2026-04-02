@@ -34,16 +34,26 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
 
-  if (body.provider_id !== callerId) {
+  if (body.consumer_id !== callerId) {
     return withCors(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), req);
   }
 
-  const { data, error } = await serviceClient()
-    .from('listings')
-    .insert(body)
+  const db = serviceClient();
+
+  const { data: resRow, error: resErr } = await db
+    .from('reservations')
+    .insert(body.reservation)
     .select()
     .single();
 
-  if (error) return withCors(NextResponse.json({ error: error.message }, { status: 500 }), req);
-  return withCors(NextResponse.json(data), req);
+  if (resErr) return withCors(NextResponse.json({ error: resErr.message }, { status: 500 }), req);
+
+  const { error: listingErr } = await db
+    .from('listings')
+    .update({ quantity_reserved: body.newReserved, status: body.newStatus })
+    .eq('id', body.listingId);
+
+  if (listingErr) return withCors(NextResponse.json({ error: listingErr.message }, { status: 500 }), req);
+
+  return withCors(NextResponse.json(resRow), req);
 }

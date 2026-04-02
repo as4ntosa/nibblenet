@@ -32,18 +32,30 @@ export async function POST(req: NextRequest) {
   const callerId = extractUserId(token);
   if (!callerId) return withCors(NextResponse.json({ error: 'Invalid token' }, { status: 401 }), req);
 
-  const body = await req.json();
+  const { reservationId, status, listingId, newReserved, newStatus } = await req.json();
+  if (!reservationId || !status) {
+    return withCors(NextResponse.json({ error: 'reservationId and status required' }, { status: 400 }), req);
+  }
 
-  if (body.provider_id !== callerId) {
+  const db = serviceClient();
+
+  const { data: res } = await db
+    .from('reservations')
+    .select('consumer_id')
+    .eq('id', reservationId)
+    .single();
+
+  if (!res || res.consumer_id !== callerId) {
     return withCors(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), req);
   }
 
-  const { data, error } = await serviceClient()
-    .from('listings')
-    .insert(body)
-    .select()
-    .single();
+  const { error } = await db.from('reservations').update({ status }).eq('id', reservationId);
 
   if (error) return withCors(NextResponse.json({ error: error.message }, { status: 500 }), req);
-  return withCors(NextResponse.json(data), req);
+
+  if (listingId && newReserved !== undefined && newStatus) {
+    await db.from('listings').update({ quantity_reserved: newReserved, status: newStatus }).eq('id', listingId);
+  }
+
+  return withCors(NextResponse.json({ success: true }), req);
 }

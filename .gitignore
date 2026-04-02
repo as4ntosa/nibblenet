@@ -22,3 +22,6 @@ npm-debug.log*
 next-env.d.ts
 .listings.swp
 .vercel
+dev.log
+/ios
+/android

@@ -5,6 +5,7 @@ import { Listing, Reservation, ListingFilters, ReservationStatus } from '@/types
 import { MOCK_LISTINGS, MOCK_RESERVATIONS } from '@/lib/mock-data';
 import { generateCode } from '@/lib/utils';
 import { supabase, isSupabaseEnabled, dbListingToListing, listingToDb, dbReservationToReservation } from '@/lib/supabase';
+import { API_BASE } from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 
 // ─── Reducer ──────────────────────────────────────────────────────────────
@@ -192,7 +193,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       if (!accessToken) throw new Error('Not authenticated. Please sign in again.');
 
       const dbRow = listingToDb(data);
-      const res = await fetch('/api/listings/create', {
+      const res = await fetch(`${API_BASE}/api/listings/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -222,7 +223,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateListing = async (id: string, data: Partial<Listing>) => {
-    if (isSupabaseEnabled && supabase) {
+    if (isSupabaseEnabled && accessToken) {
       // Convert camelCase partial to snake_case for DB
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const dbData: Record<string, any> = {};
@@ -239,15 +240,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       if ('pickupInstructions' in data) dbData.pickup_instructions = data.pickupInstructions;
       if ('imageUrl' in data) dbData.image_url = data.imageUrl;
       if (Object.keys(dbData).length > 0) {
-        await supabase.from('listings').update(dbData).eq('id', id);
+        void fetch(`${API_BASE}/api/listings/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+          body: JSON.stringify({ listingId: id, data: dbData }),
+        });
       }
     }
     dispatch({ type: 'UPDATE_LISTING', id, data });
   };
 
   const deleteListing = async (id: string) => {
-    if (isSupabaseEnabled && supabase) {
-      await supabase.from('listings').delete().eq('id', id);
+    if (isSupabaseEnabled && accessToken) {
+      await fetch(`${API_BASE}/api/listings/delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ listingId: id }),
+      });
     }
     dispatch({ type: 'DELETE_LISTING', id });
   };
@@ -262,27 +271,33 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const newStatus = newReserved >= listing.quantity ? 'sold_out' : 'available';
     const confirmationCode = `NN-${generateCode()}`;
 
-    if (isSupabaseEnabled && supabase) {
-      const { data: resRow, error: resErr } = await supabase
-        .from('reservations')
-        .insert({
-          listing_id: listing.id,
-          listing_snapshot: listing,
+    if (isSupabaseEnabled && accessToken) {
+      if (!accessToken) throw new Error('Not authenticated. Please sign in again.');
+      const res = await fetch(`${API_BASE}/api/reservations/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({
           consumer_id: consumerId,
-          consumer_name: consumerName,
-          quantity: qty,
-          total_price: listing.price * qty,
-          status: 'confirmed',
-          confirmation_code: confirmationCode,
-        })
-        .select()
-        .single();
-      if (resErr) throw new Error(resErr.message);
-
-      await supabase
-        .from('listings')
-        .update({ quantity_reserved: newReserved, status: newStatus })
-        .eq('id', listing.id);
+          listingId: listing.id,
+          newReserved,
+          newStatus,
+          reservation: {
+            listing_id: listing.id,
+            listing_snapshot: listing,
+            consumer_id: consumerId,
+            consumer_name: consumerName,
+            quantity: qty,
+            total_price: listing.price * qty,
+            status: 'confirmed',
+            confirmation_code: confirmationCode,
+          },
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(err.error ?? 'Failed to reserve listing');
+      }
+      const resRow = await res.json();
 
       const reservation: Reservation = {
         id: resRow.id,
@@ -322,17 +337,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const res = state.reservations.find((r) => r.id === id);
     if (!res) return;
     const restored = Math.max(0, res.listing.quantityReserved - res.quantity);
-    if (isSupabaseEnabled && supabase) {
-      await supabase.from('reservations').update({ status: 'cancelled' }).eq('id', id);
-      await supabase.from('listings').update({ quantity_reserved: restored, status: 'available' }).eq('id', res.listingId);
+    if (isSupabaseEnabled && accessToken) {
+      void fetch(`${API_BASE}/api/reservations/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ reservationId: id, status: 'cancelled', listingId: res.listingId, newReserved: restored, newStatus: 'available' }),
+      });
     }
     dispatch({ type: 'UPDATE_RESERVATION', id, status: 'cancelled' });
     dispatch({ type: 'UPDATE_LISTING', id: res.listingId, data: { quantityReserved: restored, status: 'available' } });
   };
 
   const confirmPickup = async (id: string) => {
-    if (isSupabaseEnabled && supabase) {
-      await supabase.from('reservations').update({ status: 'picked_up' }).eq('id', id);
+    if (isSupabaseEnabled && accessToken) {
+      void fetch(`${API_BASE}/api/reservations/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ reservationId: id, status: 'picked_up' }),
+      });
     }
     dispatch({ type: 'UPDATE_RESERVATION', id, status: 'picked_up' });
   };
@@ -341,9 +363,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const res = state.reservations.find((r) => r.id === id);
     if (!res) return;
     const restored = Math.max(0, res.listing.quantityReserved - res.quantity);
-    if (isSupabaseEnabled && supabase) {
-      await supabase.from('reservations').update({ status: 'cancelled_at_pickup' }).eq('id', id);
-      await supabase.from('listings').update({ quantity_reserved: restored, status: 'available' }).eq('id', res.listingId);
+    if (isSupabaseEnabled && accessToken) {
+      void fetch(`${API_BASE}/api/reservations/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify({ reservationId: id, status: 'cancelled_at_pickup', listingId: res.listingId, newReserved: restored, newStatus: 'available' }),
+      });
     }
     dispatch({ type: 'UPDATE_RESERVATION', id, status: 'cancelled_at_pickup' });
     dispatch({ type: 'UPDATE_LISTING', id: res.listingId, data: { quantityReserved: restored, status: 'available' } });

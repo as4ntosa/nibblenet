@@ -4,6 +4,18 @@ import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { ChatBot } from '@/components/ChatBot';
 
+// Detect if running inside a Capacitor native WebView
+function useIsNative() {
+  const [isNative, setIsNative] = useState(false);
+  useEffect(() => {
+    // window.Capacitor is injected by the Capacitor runtime in native apps
+    if (typeof window !== 'undefined' && !!(window as unknown as Record<string, unknown>).Capacitor) {
+      setIsNative(true);
+    }
+  }, []);
+  return isNative;
+}
+
 // ─── Status Bar ────────────────────────────────────────────────────────────
 function StatusBar() {
   const [time, setTime] = useState('');
@@ -124,6 +136,7 @@ interface iPhoneFrameProps {
 export function IPhoneFrame({ children }: iPhoneFrameProps) {
   const [scale, setScale] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isNative = useIsNative();
 
   useEffect(() => {
     const compute = () => {
@@ -138,6 +151,22 @@ export function IPhoneFrame({ children }: iPhoneFrameProps) {
     window.addEventListener('resize', compute);
     return () => window.removeEventListener('resize', compute);
   }, []);
+
+  // In native Capacitor WebView: render children directly with safe-area top padding
+  if (isNative) {
+    return (
+      <div
+        style={{
+          minHeight: '100dvh',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          position: 'relative',
+        }}
+      >
+        {children}
+        <ChatBot />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -282,7 +311,13 @@ export function IPhoneFrame({ children }: iPhoneFrameProps) {
       </div>
 
       {/* ── Mobile: full screen ── */}
-      <div className="md:hidden min-h-screen relative">
+      <div
+        className="md:hidden relative"
+        style={{
+          minHeight: '100dvh',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+        }}
+      >
         {children}
         <ChatBot />
       </div>

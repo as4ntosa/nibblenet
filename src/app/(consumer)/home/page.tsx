@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search, MapPin, Navigation, Loader2, Leaf, AlertCircle, LayoutGrid, Map, Zap } from 'lucide-react';
 import Link from 'next/link';
@@ -16,7 +16,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 
 type ViewMode = 'list' | 'map';
 
-export default function HomePage() {
+function HomeContent() {
   const { user } = useAuth();
   const { getListings, listingsFetchStatus } = useData();
   const searchParams = useSearchParams();
@@ -313,5 +313,13 @@ export default function HomePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="p-4 space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-48 bg-gray-100 rounded-2xl animate-pulse" />)}</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

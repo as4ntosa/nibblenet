@@ -46,7 +46,7 @@ export default function ProviderPendingPage() {
       )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => { supabase?.removeChannel(channel); };
   }, [user?.id]);
 
   if (rejected) {

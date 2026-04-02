@@ -32,18 +32,23 @@ export async function POST(req: NextRequest) {
   const callerId = extractUserId(token);
   if (!callerId) return withCors(NextResponse.json({ error: 'Invalid token' }, { status: 401 }), req);
 
-  const body = await req.json();
+  const { listingId, data } = await req.json();
+  if (!listingId) return withCors(NextResponse.json({ error: 'listingId required' }, { status: 400 }), req);
 
-  if (body.provider_id !== callerId) {
+  const db = serviceClient();
+
+  const { data: listing } = await db
+    .from('listings')
+    .select('provider_id')
+    .eq('id', listingId)
+    .single();
+
+  if (!listing || listing.provider_id !== callerId) {
     return withCors(NextResponse.json({ error: 'Forbidden' }, { status: 403 }), req);
   }
 
-  const { data, error } = await serviceClient()
-    .from('listings')
-    .insert(body)
-    .select()
-    .single();
+  const { error } = await db.from('listings').update(data).eq('id', listingId);
 
   if (error) return withCors(NextResponse.json({ error: error.message }, { status: 500 }), req);
-  return withCors(NextResponse.json(data), req);
+  return withCors(NextResponse.json({ success: true }), req);
 }

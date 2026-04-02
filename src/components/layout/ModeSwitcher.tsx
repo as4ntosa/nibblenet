@@ -34,9 +34,10 @@ export function ModeSwitcher() {
     <div
       className={`fixed left-0 right-0 z-30 flex items-center justify-between px-4 py-1.5 text-xs font-medium select-none transition-colors ${
         isProviderMode
-          ? 'bg-amber-500 text-white bottom-[60px]'
-          : 'bg-brand-600 text-white bottom-[60px]'
+          ? 'bg-amber-500 text-white'
+          : 'bg-brand-600 text-white'
       }`}
+      style={{ bottom: 'calc(60px + env(safe-area-inset-bottom, 0px))' }}
     >
       {/* Current mode label */}
       <div className="flex items-center gap-1.5">

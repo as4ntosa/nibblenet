@@ -38,8 +38,10 @@ export default function ProviderLayout({ children }: { children: React.ReactNode
 
   return (
     <div className="min-h-full bg-gray-50">
-      {/* Extra bottom padding: mode switcher strip (24px) + nav bar (60px) */}
-      <main className="pb-[96px]">{children}</main>
+      {/* Extra bottom padding: mode switcher strip (24px) + nav bar (60px) + safe area */}
+      <main style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}>
+        {children}
+      </main>
       <ProviderNav />
     </div>
   );

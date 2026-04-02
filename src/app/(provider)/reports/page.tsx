@@ -9,6 +9,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { formatPrice, cn } from '@/lib/utils';
+import { API_BASE } from '@/lib/api';
 import type { ProviderAnalytics } from '@/lib/analytics';
 
 interface AIReport {
@@ -35,7 +36,7 @@ export default function ReportsPage() {
     setError(null);
     try {
       const res = await fetch(
-        `/api/report?providerId=${user.id}&providerName=${encodeURIComponent(user.businessName || user.name)}`
+        `${API_BASE}/api/report?providerId=${user.id}&providerName=${encodeURIComponent(user.businessName || user.name)}`
       );
       if (!res.ok) throw new Error('Failed to fetch report');
       const json = await res.json();

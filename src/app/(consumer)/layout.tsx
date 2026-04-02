@@ -36,7 +36,15 @@ export default function ConsumerLayout({ children }: { children: React.ReactNode
 
   return (
     <div className="min-h-full bg-gray-50">
-      <main className={hasModeSwitcher ? 'pb-[96px]' : 'pb-[76px]'}>{children}</main>
+      <main
+        style={{
+          paddingBottom: hasModeSwitcher
+            ? 'calc(96px + env(safe-area-inset-bottom, 0px))'
+            : 'calc(76px + env(safe-area-inset-bottom, 0px))',
+        }}
+      >
+        {children}
+      </main>
       <BottomNav />
     </div>
   );

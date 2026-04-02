@@ -22,7 +22,10 @@ export function ProviderNav() {
       {/* Mode switcher strip — always shown in provider layout (user is always approved here) */}
       <ModeSwitcher />
 
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100">
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-100"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
         <div className="flex items-stretch">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const active =

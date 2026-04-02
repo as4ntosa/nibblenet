@@ -5,6 +5,7 @@ import { User, UserRole, AppMode, ProviderType } from '@/types';
 import { DEMO_USERS } from '@/lib/mock-data';
 import { generateId } from '@/lib/utils';
 import { supabase, isSupabaseEnabled, dbProfileToUser, profileDataToDb } from '@/lib/supabase';
+import { API_BASE } from '@/lib/api';
 
 interface AuthContextValue {
   user: User | null;
@@ -60,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isSupabaseEnabled && supabase) {
+      const sb = supabase;
       // Seed from localStorage instantly so the UI is never blocked waiting for Supabase
       if (isBrowser) {
         try {
@@ -69,11 +71,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Bootstrap session from Supabase
-      supabase.auth.getSession().then(async ({ data: { session } }) => {
+      sb.auth.getSession().then(async ({ data: { session } }) => {
         if (session?.user) {
           setAccessToken(session.access_token);
           setLoading(false); // unblock UI immediately; localStorage already seeded user above
-          const { data: profile } = await supabase
+          const { data: profile } = await sb
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
@@ -84,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       });
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const { data: { subscription } } = sb.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_OUT' || !session) {
           setUser(null);
           setAccessToken(null);
@@ -92,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         if (session?.user) {
           setAccessToken(session.access_token);
-          const { data: profile } = await supabase
+          const { data: profile } = await sb
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
@@ -107,11 +109,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Watch for admin-driven profile changes (e.g. provider approval/rejection)
       // so the user's local state stays in sync without requiring a sign-out/sign-in.
-      let profileChannel: ReturnType<typeof supabase.channel> | null = null;
+      let profileChannel: ReturnType<typeof sb.channel> | null = null;
 
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      sb.auth.getSession().then(({ data: { session } }) => {
         if (!session?.user) return;
-        profileChannel = supabase
+        profileChannel = sb
           .channel('auth-profile-sync')
           .on(
             'postgres_changes',
@@ -130,7 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       return () => {
         subscription.unsubscribe();
-        if (profileChannel) supabase.removeChannel(profileChannel);
+        if (profileChannel) sb.removeChannel(profileChannel);
       };
     } else {
       // Mock / localStorage mode
@@ -221,7 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (isSupabaseEnabled && accessToken) {
       const dbData = profileDataToDb(data);
-      void fetch('/api/profile/update', {
+      void fetch(`${API_BASE}/api/profile/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
         body: JSON.stringify(dbData),

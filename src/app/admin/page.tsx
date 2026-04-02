@@ -6,6 +6,7 @@ import { CheckCircle, XCircle, Clock, Users, RefreshCw, ChevronRight, ShieldChec
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { API_BASE } from '@/lib/api';
 
 interface Applicant {
   id: string;
@@ -198,7 +199,7 @@ export default function AdminPage() {
   const handleApprove = async (userId: string) => {
     setActing(true);
     const token = await getToken();
-    const res = await fetch('/api/admin/approve', {
+    const res = await fetch(`${API_BASE}/api/admin/approve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ userId }),
@@ -210,7 +211,7 @@ export default function AdminPage() {
   const handleReject = async (userId: string) => {
     setActing(true);
     const token = await getToken();
-    const res = await fetch('/api/admin/reject', {
+    const res = await fetch(`${API_BASE}/api/admin/reject`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({ userId }),

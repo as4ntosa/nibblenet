@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getProviderOrders } from '@/lib/mock-orders';
 import { calculateAnalytics, buildReportPrompt } from '@/lib/analytics';
+import { handleCors, withCors } from '@/lib/cors';
 
 // Featherless AI config
 const FEATHERLESS_API_KEY = 'rc_82ef6597804cb6b2ab383a3b60d9d088c29c0a45e06d567d512066fbc7e70dcc';
@@ -26,6 +27,10 @@ function generateFallbackInsights(providerName: string, analytics: ReturnType<ty
       peak ? `Focus marketing and availability around ${peak.label} when customer demand is highest.` : 'Experiment with different pickup windows.',
     ],
   };
+}
+
+export async function OPTIONS(req: NextRequest) {
+  return handleCors(req) ?? new NextResponse(null, { status: 204 });
 }
 
 export async function GET(request: NextRequest) {
@@ -82,8 +87,5 @@ export async function GET(request: NextRequest) {
     aiReport = generateFallbackInsights(providerName, analytics);
   }
 
-  return NextResponse.json({
-    analytics,
-    report: aiReport,
-  });
+  return withCors(NextResponse.json({ analytics, report: aiReport }), request);
 }
